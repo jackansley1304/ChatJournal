@@ -112,9 +112,9 @@ Your unencrypted journal text exists only in memory while the app is open. On di
 
 Contributions are welcome. Some things that would make this better:
 
-- [ ] Minimum password length enforcement
+- [🟢] Minimum password length enforcement
+- [🟢] Rate limiting on password attempts
 - [ ] PBKDF2 iteration count increase (OWASP recommends 600,000 for SHA-256)
-- [ ] Rate limiting on password attempts
 - [ ] Storage usage indicator visible outside settings
 - [ ] Accessibility audit (screen reader support, keyboard navigation)
 - [ ] Optional prompt/question system to guide reflection
