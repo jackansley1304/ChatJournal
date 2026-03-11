@@ -573,6 +573,9 @@ mark {
       <p style="font-size:13px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Security</p>
     </div>
     <button class="setting-btn secondary" id="changePwBtn">Change Password</button>
+    <div class="storage-usage" id="storageUsage" style="text-align:center;font-size:13px;color:var(--text-secondary);padding:8px 0 0;">
+      Storage: calculating...
+    </div>
     <div class="pw-change" id="pwChangeSection">
       <input type="password" id="oldPwInput" placeholder="Current password" autocomplete="off">
       <input type="password" id="newPwInput" placeholder="New password" autocomplete="off">
@@ -587,6 +590,68 @@ mark {
 </div>
 
 <script>
+// ===========================
+// INDEXEDDB STORAGE (replaces localStorage)
+// ===========================
+const DB_NAME = 'journal_db';
+const DB_VERSION = 1;
+const STORE_NAME = 'kv';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const req = tx.objectStore(STORE_NAME).get(key);
+    req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbSet(key, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function idbDelete(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getStorageUsage() {
+  try {
+    const data = await idbGet('journal_data');
+    if (!data) return { used: 0, label: '0 KB' };
+    const bytes = new Blob([data]).size;
+    if (bytes < 1024) return { used: bytes, label: bytes + ' B' };
+    if (bytes < 1024 * 1024) return { used: bytes, label: (bytes / 1024).toFixed(1) + ' KB' };
+    return { used: bytes, label: (bytes / (1024 * 1024)).toFixed(1) + ' MB' };
+  } catch { return { used: 0, label: '0 KB' }; }
+}
+
 // ===========================
 // CRYPTO UTILITIES
 // ===========================
@@ -662,7 +727,7 @@ async function saveState() {
   try {
     const json = JSON.stringify(state);
     const encrypted = await encryptData(json, cryptoKey);
-    localStorage.setItem('journal_data', encrypted);
+    await idbSet('journal_data', encrypted);
   } catch (e) {
     console.error('Save failed:', e);
     showToast('Failed to save data');
@@ -676,8 +741,8 @@ function debouncedSave() {
 
 async function loadState(password) {
   try {
-    const saltB64 = localStorage.getItem('journal_salt');
-    const dataB64 = localStorage.getItem('journal_data');
+    const saltB64 = await idbGet('journal_salt');
+    const dataB64 = await idbGet('journal_data');
     if (!saltB64 || !dataB64) return false;
     salt = base64ToUint8(saltB64);
     cryptoKey = await deriveKey(password, salt);
@@ -697,7 +762,7 @@ async function createAccount(password) {
   salt = crypto.getRandomValues(new Uint8Array(32));
   cryptoKey = await deriveKey(password, salt);
   state = defaultState();
-  localStorage.setItem('journal_salt', uint8ToBase64(salt));
+  await idbSet('journal_salt', uint8ToBase64(salt));
   await saveState();
   currentPassword = password;
 }
@@ -1000,8 +1065,8 @@ async function exportData() {
   try {
     const exportObj = {
       version: 1,
-      salt: localStorage.getItem('journal_salt'),
-      data: localStorage.getItem('journal_data'),
+      salt: await idbGet('journal_salt'),
+      data: await idbGet('journal_data'),
       exported: new Date().toISOString()
     };
     const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
@@ -1064,9 +1129,11 @@ function toggleTheme() {
 // ===========================
 // SETTINGS
 // ===========================
-function openSettings() {
+async function openSettings() {
   document.getElementById('settingsModal').classList.add('active');
   closePwChange();
+  const usage = await getStorageUsage();
+  document.getElementById('storageUsage').textContent = 'Storage used: ' + usage.label;
 }
 
 function closeSettings() {
@@ -1098,9 +1165,11 @@ async function submitPwChange() {
 
   // Verify old password
   try {
-    const testSalt = base64ToUint8(localStorage.getItem('journal_salt'));
+    const testSaltB64 = await idbGet('journal_salt');
+    const testSalt = base64ToUint8(testSaltB64);
     const testKey = await deriveKey(oldPw, testSalt);
-    await decryptData(localStorage.getItem('journal_data'), testKey);
+    const testData = await idbGet('journal_data');
+    await decryptData(testData, testKey);
   } catch {
     showToast('Current password is incorrect');
     return;
@@ -1110,7 +1179,7 @@ async function submitPwChange() {
   salt = crypto.getRandomValues(new Uint8Array(32));
   cryptoKey = await deriveKey(newPw, salt);
   currentPassword = newPw;
-  localStorage.setItem('journal_salt', uint8ToBase64(salt));
+  await idbSet('journal_salt', uint8ToBase64(salt));
   await saveState();
 
   closePwChange();
@@ -1196,20 +1265,37 @@ function setupManifest() {
 // ===========================
 // INITIALIZATION
 // ===========================
-function init() {
-  // Check localStorage availability
+async function init() {
+  // Check IndexedDB availability
   try {
-    localStorage.setItem('__test', '1');
-    localStorage.removeItem('__test');
+    await openDB();
   } catch {
     document.getElementById('lockScreen').innerHTML =
-      '<div class="lock-container"><h1>Storage Unavailable</h1><p class="lock-subtitle">This app requires localStorage. Please ensure you are not in private browsing mode.</p></div>';
+      '<div class="lock-container"><h1>Storage Unavailable</h1><p class="lock-subtitle">This app requires IndexedDB. Please ensure you are not in private browsing mode.</p></div>';
     return;
+  }
+
+  // Migrate from localStorage to IndexedDB (one-time)
+  try {
+    const legacySalt = localStorage.getItem('journal_salt');
+    const legacyData = localStorage.getItem('journal_data');
+    if (legacySalt && legacyData) {
+      const existingSalt = await idbGet('journal_salt');
+      if (!existingSalt) {
+        await idbSet('journal_salt', legacySalt);
+        await idbSet('journal_data', legacyData);
+        localStorage.removeItem('journal_salt');
+        localStorage.removeItem('journal_data');
+        console.log('Migrated from localStorage to IndexedDB');
+      }
+    }
+  } catch (e) {
+    console.warn('Migration check skipped:', e);
   }
 
   setupManifest();
 
-  const isReturning = !!localStorage.getItem('journal_salt');
+  const isReturning = !!(await idbGet('journal_salt'));
 
   if (isReturning) {
     document.getElementById('confirmInput').hidden = true;
