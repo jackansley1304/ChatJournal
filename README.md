@@ -29,6 +29,10 @@ A private, encrypted journal that lives entirely in your browser. No servers, no
 3. Set a password
 4. Start writing
 
+or
+
+You can head to the URL using your browser and start using it. 
+
 That's it. No installation, no server, no configuration.
 
 To install as a phone app: open the file in your browser, tap "Add to Home Screen." 
