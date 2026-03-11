@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Journal">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f2f2f7">
+<meta name="description" content="Private encrypted journal">
+<link rel="manifest" id="manifest-link">
+<title>Journal</title>
+<style>
+:root {
+  --bg-primary: #f2f2f7;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e5e5ea;
+  --text-primary: #000000;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #aeaeb2;
+  --bubble-self: #007AFF;
+  --bubble-other: #e5e5ea;
+  --bubble-self-text: #ffffff;
+  --bubble-other-text: #000000;
+  --border-color: #d1d1d6;
+  --nav-bg: rgba(255,255,255,0.92);
+  --input-bg: #ffffff;
+  --card-bg: #ffffff;
+  --danger: #FF3B30;
+  --success: #34C759;
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  --overlay: rgba(0,0,0,0.4);
+  --search-hl: #FFD60A;
+}
+[data-theme="dark"] {
+  --bg-primary: #000000;
+  --bg-secondary: #1c1c1e;
+  --bg-tertiary: #2c2c2e;
+  --text-primary: #ffffff;
+  --text-secondary: #8e8e93;
+  --text-tertiary: #636366;
+  --bubble-self: #0A84FF;
+  --bubble-other: #2c2c2e;
+  --bubble-self-text: #ffffff;
+  --bubble-other-text: #ffffff;
+  --border-color: #38383a;
+  --nav-bg: rgba(28,28,30,0.92);
+  --input-bg: #1c1c1e;
+  --card-bg: #1c1c1e;
+  --shadow: 0 2px 16px rgba(0,0,0,0.3);
+  --overlay: rgba(0,0,0,0.6);
+  --search-hl: #664D00;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+input, textarea, button { font-family: inherit; -webkit-appearance: none; appearance: none; }
+input, textarea { font-size: 16px; }
+
+/* Lock Screen */
+#lockScreen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 24px;
+  background: var(--bg-primary);
+}
+.lock-container { text-align: center; max-width: 320px; width: 100%; }
+.lock-icon {
+  width: 64px; height: 64px; margin: 0 auto 20px;
+  background: var(--bg-tertiary); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.lock-icon svg { width: 32px; height: 32px; color: var(--text-secondary); }
+.lock-container h1 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.lock-subtitle { color: var(--text-secondary); font-size: 15px; margin-bottom: 28px; }
+.lock-container input {
+  width: 100%; padding: 14px 16px; border: 1px solid var(--border-color);
+  border-radius: 12px; background: var(--bg-secondary); color: var(--text-primary);
+  outline: none; margin-bottom: 12px; transition: border-color 0.2s;
+}
+.lock-container input:focus { border-color: var(--bubble-self); }
+.lock-container .lock-btn {
+  width: 100%; padding: 14px; background: #007AFF; color: white;
+  border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+  cursor: pointer; margin-top: 4px; transition: opacity 0.2s;
+}
+.lock-container .lock-btn:active { opacity: 0.8; }
+.lock-error { color: var(--danger); font-size: 13px; margin-top: 12px; min-height: 18px; }
+
+/* App Layout */
+#app {
+  display: flex; flex-direction: column;
+  height: 100vh; height: 100dvh;
+  animation: fadeIn 0.3s ease;
+}
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 20px 0; flex-shrink: 0;
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+.settings-btn {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  color: var(--text-primary); display: flex; align-items: center; justify-content: center;
+}
+.settings-btn svg { width: 26px; height: 26px; }
+.pov-area { display: flex; align-items: center; gap: 8px; }
+.pov-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+/* Toggle */
+.toggle { position: relative; display: inline-block; width: 51px; height: 31px; flex-shrink: 0; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: #e5e5ea; border-radius: 31px; transition: 0.3s;
+}
+[data-theme="dark"] .toggle-slider { background: #636366; }
+.toggle-slider::before {
+  content: ""; position: absolute; height: 27px; width: 27px;
+  left: 2px; bottom: 2px; background: white; border-radius: 50%;
+  transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+.toggle input:checked + .toggle-slider { background: #34C759; }
+.toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* Tab Title */
+.tab-title {
+  font-size: 28px; font-weight: 700; padding: 8px 20px 10px;
+  flex-shrink: 0;
+}
+
+/* Tab Content */
+.tab-content { flex: 1; display: none; flex-direction: column; overflow: hidden; min-height: 0; }
+.tab-content.active { display: flex; }
+
+/* Chat Area */
+.chat-area {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: 8px 16px 8px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+.chat-card {
+  background: var(--card-bg); border-radius: 16px;
+  min-height: 100%; padding: 12px;
+  border: 1px solid var(--border-color);
+  display: flex; flex-direction: column;
+}
+.chat-messages { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; }
+.date-header {
+  text-align: center; font-size: 12px; font-weight: 600;
+  color: var(--text-secondary); padding: 12px 0 8px;
+}
+.bubble-wrapper {
+  display: flex; flex-direction: column; margin-bottom: 2px;
+  animation: slideUp 0.2s ease; position: relative; padding: 1px 0;
+}
+.bubble-wrapper.self { align-items: flex-end; }
+.bubble-wrapper.other { align-items: flex-start; }
+.bubble-wrapper.gap { margin-top: 10px; }
+.bubble {
+  max-width: 78%; padding: 9px 14px; word-wrap: break-word;
+  white-space: pre-wrap; line-height: 1.35; font-size: 16px;
+  border-radius: 18px; position: relative;
+}
+.bubble.self {
+  background: var(--bubble-self); color: var(--bubble-self-text);
+  border-bottom-right-radius: 6px;
+}
+.bubble.other {
+  background: var(--bubble-other); color: var(--bubble-other-text);
+  border-bottom-left-radius: 6px;
+}
+.bubble-time {
+  font-size: 11px; color: var(--text-secondary);
+  padding: 2px 6px 0; opacity: 0; transition: opacity 0.2s;
+  user-select: none;
+}
+.bubble-wrapper:hover .bubble-time,
+.bubble-wrapper.show-time .bubble-time { opacity: 1; }
+.bubble-wrapper.self .bubble-time { text-align: right; }
+.delete-btn {
+  background: none; border: none; color: var(--danger);
+  font-size: 12px; cursor: pointer; padding: 2px 6px;
+  display: none;
+}
+.bubble-wrapper.selected .delete-btn { display: inline-block; }
+
+/* Empty State */
+.empty-state {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 12px;
+  opacity: 0.5; padding: 40px;
+}
+.empty-state svg { width: 48px; height: 48px; color: var(--text-tertiary); }
+.empty-state p { font-size: 15px; color: var(--text-secondary); }
+
+/* Input Bar */
+.input-bar {
+  display: flex; align-items: flex-end; gap: 8px;
+  padding: 8px 16px 8px; flex-shrink: 0;
+  background: var(--bg-primary);
+}
+.input-bar textarea {
+  flex: 1; padding: 10px 14px; border: 1px solid var(--border-color);
+  border-radius: 20px; background: var(--input-bg); color: var(--text-primary);
+  outline: none; resize: none; min-height: 40px; max-height: 120px;
+  line-height: 1.35; transition: border-color 0.2s;
+}
+.input-bar textarea:focus { border-color: var(--bubble-self); }
+.input-bar textarea::placeholder { color: var(--text-tertiary); }
+.send-btn {
+  width: 36px; height: 36px; border-radius: 50%; border: none;
+  background: #007AFF; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+  transition: opacity 0.2s, transform 0.1s; margin-bottom: 2px;
+}
+.send-btn:active { transform: scale(0.92); }
+.send-btn:disabled { opacity: 0.4; }
+.send-btn svg { width: 20px; height: 20px; color: white; }
+
+/* Bottom Nav */
+.bottom-nav {
+  display: flex; justify-content: space-around; align-items: center;
+  background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-radius: 22px; margin: 4px 20px;
+  padding: 6px 4px;
+  box-shadow: var(--shadow); flex-shrink: 0;
+  margin-bottom: max(8px, env(safe-area-inset-bottom));
+  border: 1px solid var(--border-color);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: none; background: none; color: var(--text-secondary);
+  cursor: pointer; padding: 6px 16px; border-radius: 14px;
+  transition: color 0.2s, background 0.2s; min-width: 60px;
+}
+.nav-item.active { color: #007AFF; background: rgba(0,122,255,0.08); }
+.nav-item svg { width: 22px; height: 22px; }
+.nav-item span { font-size: 10px; font-weight: 500; }
+
+/* Ideas */
+.ideas-list {
+  flex: 1; overflow-y: auto; padding: 8px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.idea-card {
+  background: var(--card-bg); border-radius: 12px;
+  padding: 12px 16px; margin-bottom: 8px;
+  border: 1px solid var(--border-color);
+  animation: slideUp 0.2s ease; position: relative;
+}
+.idea-text { font-size: 15px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
+.idea-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 6px;
+}
+.idea-time { font-size: 11px; color: var(--text-secondary); }
+.idea-del {
+  background: none; border: none; color: var(--danger);
+  font-size: 12px; cursor: pointer; padding: 2px 6px; opacity: 0;
+  transition: opacity 0.2s;
+}
+.idea-card:hover .idea-del { opacity: 1; }
+@media (hover: none) { .idea-del { opacity: 0.6; } }
+
+/* Upload */
+.upload-area {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 32px 24px; gap: 16px; text-align: center;
+}
+.upload-area h2 { font-size: 20px; font-weight: 700; }
+.upload-area p { font-size: 14px; color: var(--text-secondary); max-width: 300px; line-height: 1.5; }
+.upload-btn {
+  width: 100%; max-width: 280px; padding: 14px;
+  border-radius: 12px; font-size: 16px; font-weight: 600;
+  cursor: pointer; border: none; transition: opacity 0.2s;
+}
+.upload-btn:active { opacity: 0.8; }
+.upload-btn.primary { background: #007AFF; color: white; }
+.upload-btn.secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+.upload-icon { margin-bottom: 8px; }
+.upload-icon svg { width: 56px; height: 56px; color: var(--text-tertiary); }
+
+/* Search */
+.search-area { flex: 1; display: flex; flex-direction: column; padding: 0 16px; overflow: hidden; }
+.search-input-wrap { flex-shrink: 0; margin-bottom: 12px; }
+.search-input {
+  width: 100%; padding: 12px 16px; border-radius: 12px;
+  border: 1px solid var(--border-color); background: var(--input-bg);
+  color: var(--text-primary); outline: none; transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--bubble-self); }
+.search-input::placeholder { color: var(--text-tertiary); }
+.search-results { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.search-result {
+  padding: 10px 14px; border-radius: 10px; margin-bottom: 6px;
+  background: var(--card-bg); border: 1px solid var(--border-color);
+}
+.search-result-type {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  color: var(--text-secondary); margin-bottom: 4px; letter-spacing: 0.5px;
+}
+.search-result-text { font-size: 14px; line-height: 1.4; }
+.search-result-time { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+mark {
+  background: var(--search-hl); color: inherit;
+  border-radius: 2px; padding: 0 1px;
+}
+.search-empty { text-align: center; color: var(--text-secondary); padding: 40px 0; font-size: 14px; }
+
+/* Settings Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: var(--overlay);
+  z-index: 100; display: flex; align-items: flex-end;
+  justify-content: center; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+  background: var(--bg-secondary); border-radius: 16px 16px 0 0;
+  width: 100%; max-width: 480px; padding: 0;
+  transform: translateY(100%); transition: transform 0.3s ease;
+  max-height: 85vh; overflow-y: auto;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.modal-overlay.active .modal-content { transform: translateY(0); }
+.modal-handle {
+  width: 36px; height: 5px; background: var(--bg-tertiary);
+  border-radius: 3px; margin: 10px auto 0;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 20px 12px;
+}
+.modal-header h2 { font-size: 20px; font-weight: 700; }
+.modal-close {
+  background: var(--bg-tertiary); border: none; width: 30px; height: 30px;
+  border-radius: 50%; cursor: pointer; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-secondary);
+}
+.setting-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px; border-top: 1px solid var(--border-color);
+}
+.setting-row span { font-size: 16px; }
+.setting-btn {
+  width: calc(100% - 40px); margin: 8px 20px; padding: 13px;
+  border-radius: 12px; font-size: 15px; font-weight: 600;
+  cursor: pointer; border: none; text-align: center; transition: opacity 0.2s;
+}
+.setting-btn:active { opacity: 0.8; }
+.setting-btn.primary { background: #007AFF; color: white; }
+.setting-btn.secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+.setting-btn.danger { background: none; color: var(--danger); }
+
+/* Change Password */
+.pw-change { padding: 0 20px 8px; display: none; }
+.pw-change.active { display: block; }
+.pw-change input {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--border-color);
+  border-radius: 10px; background: var(--bg-primary); color: var(--text-primary);
+  outline: none; margin-bottom: 8px;
+}
+.pw-change input:focus { border-color: var(--bubble-self); }
+.pw-change-btns { display: flex; gap: 8px; }
+.pw-change-btns button {
+  flex: 1; padding: 11px; border-radius: 10px; font-size: 14px;
+  font-weight: 600; cursor: pointer; border: none;
+}
+
+/* Toast */
+.toast {
+  position: fixed; top: 60px; left: 50%; z-index: 300;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--text-primary); color: var(--bg-primary);
+  padding: 10px 22px; border-radius: 20px; font-size: 14px;
+  opacity: 0; transition: all 0.3s; white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Backup Reminder */
+.backup-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #FFF3CD; color: #856404; font-size: 13px;
+  padding: 8px 16px; border-radius: 10px; margin: 4px 16px 4px;
+  flex-shrink: 0;
+}
+[data-theme="dark"] .backup-banner { background: #3a3000; color: #ffd60a; }
+.backup-banner button {
+  background: none; border: none; font-weight: 700;
+  color: inherit; cursor: pointer; padding: 2px 6px; font-size: 13px;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Scrollbar */
+.chat-area::-webkit-scrollbar, .ideas-list::-webkit-scrollbar, .search-results::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-thumb, .ideas-list::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 4px; }
+
+/* Fix iOS input zoom */
+@supports (-webkit-touch-callout: none) {
+  input, textarea { font-size: 16px !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOCK SCREEN ==================== -->
+<div id="lockScreen">
+  <div class="lock-container">
+    <div class="lock-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+    </div>
+    <h1>Journal</h1>
+    <p class="lock-subtitle" id="lockSubtitle">Set a password to protect your journal</p>
+    <input type="password" id="passwordInput" placeholder="Password" autocomplete="off">
+    <input type="password" id="confirmInput" placeholder="Confirm password" autocomplete="off">
+    <button class="lock-btn" id="lockBtn">Set Password</button>
+    <p class="lock-error" id="lockError"></p>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="app" hidden>
+  <!-- Header -->
+  <div class="header">
+    <button class="settings-btn" id="settingsOpen" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.32 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    </button>
+    <div class="pov-area" id="povArea">
+      <span class="pov-label" id="povLabel">Me</span>
+      <label class="toggle">
+        <input type="checkbox" id="povToggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Tab Title -->
+  <h1 class="tab-title" id="tabTitle">Chat</h1>
+
+  <!-- Backup Reminder -->
+  <div class="backup-banner" id="backupBanner" hidden>
+    <span>Back up your journal to prevent data loss</span>
+    <button id="backupDismiss">Dismiss</button>
+  </div>
+
+  <!-- Chat Tab -->
+  <div class="tab-content active" id="chatTab">
+    <div class="chat-area" id="chatArea">
+      <div class="chat-card" id="chatCard">
+        <div class="chat-messages" id="chatMessages"></div>
+      </div>
+    </div>
+    <div class="input-bar">
+      <textarea id="chatInput" placeholder="Write something..." rows="1"></textarea>
+      <button class="send-btn" id="chatSend" disabled aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Ideas Tab -->
+  <div class="tab-content" id="ideasTab">
+    <div class="ideas-list" id="ideasList"></div>
+    <div class="input-bar">
+      <textarea id="ideaInput" placeholder="Jot an idea..." rows="1"></textarea>
+      <button class="send-btn" id="ideaSend" disabled aria-label="Add idea">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Upload Tab -->
+  <div class="tab-content" id="uploadTab">
+    <div class="upload-area">
+      <div class="upload-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <h2>Backup & Restore</h2>
+      <p>Export your encrypted journal to protect against data loss, or import a previous backup to restore your entries.</p>
+      <button class="upload-btn primary" id="exportBtn">Export Encrypted Backup</button>
+      <button class="upload-btn secondary" id="importBtn">Import Backup</button>
+      <input type="file" id="importFile" accept=".json" hidden>
+    </div>
+  </div>
+
+  <!-- Search Tab -->
+  <div class="tab-content" id="searchTab">
+    <div class="search-area">
+      <div class="search-input-wrap">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search entries and ideas...">
+      </div>
+      <div class="search-results" id="searchResults">
+        <div class="search-empty">Type to search your journal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-tab="chat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+      </svg>
+      <span>Chat</span>
+    </button>
+    <button class="nav-item" data-tab="ideas">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="10" y2="21"/><line x1="14" y1="17" x2="14" y2="21"/>
+      </svg>
+      <span>Ideas</span>
+    </button>
+    <button class="nav-item" data-tab="upload">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <span>Upload</span>
+    </button>
+    <button class="nav-item" data-tab="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span>Search</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ==================== SETTINGS MODAL ==================== -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2>Settings</h2>
+      <button class="modal-close" id="settingsClose">&times;</button>
+    </div>
+    <div class="setting-row">
+      <span>Dark Mode</span>
+      <label class="toggle">
+        <input type="checkbox" id="themeToggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div style="padding: 12px 20px 4px;">
+      <p style="font-size:13px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Data</p>
+    </div>
+    <button class="setting-btn primary" id="settingsExport">Export Encrypted Backup</button>
+    <button class="setting-btn secondary" id="settingsImport">Import Backup</button>
+    <div style="padding: 16px 20px 4px;">
+      <p style="font-size:13px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Security</p>
+    </div>
+    <button class="setting-btn secondary" id="changePwBtn">Change Password</button>
+    <div class="pw-change" id="pwChangeSection">
+      <input type="password" id="oldPwInput" placeholder="Current password" autocomplete="off">
+      <input type="password" id="newPwInput" placeholder="New password" autocomplete="off">
+      <input type="password" id="confirmPwInput" placeholder="Confirm new password" autocomplete="off">
+      <div class="pw-change-btns">
+        <button style="background:var(--bg-tertiary);color:var(--text-primary)" id="pwChangeCancel">Cancel</button>
+        <button style="background:#007AFF;color:white" id="pwChangeSubmit">Update</button>
+      </div>
+    </div>
+    <div style="height: 8px;"></div>
+  </div>
+</div>
+
+<script>
+// ===========================
+// CRYPTO UTILITIES
+// ===========================
+const PBKDF2_ITERATIONS = 100000;
+
+function uint8ToBase64(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+
+function base64ToUint8(b64) {
+  const s = atob(b64);
+  const a = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+  return a;
+}
+
+async function deriveKey(password, salt) {
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptData(plaintext, key) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext)
+  );
+  const buf = new Uint8Array(12 + ct.byteLength);
+  buf.set(iv);
+  buf.set(new Uint8Array(ct), 12);
+  return uint8ToBase64(buf);
+}
+
+async function decryptData(b64, key) {
+  const buf = base64ToUint8(b64);
+  const iv = buf.slice(0, 12);
+  const ct = buf.slice(12);
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(pt);
+}
+
+// ===========================
+// STATE MANAGEMENT
+// ===========================
+let cryptoKey = null;
+let salt = null;
+let currentPassword = null;
+let state = null;
+let activeTab = 'chat';
+let selectedBubble = null;
+let saveTimeout = null;
+
+function defaultState() {
+  return {
+    _verify: 'JOURNAL_V1',
+    entries: [],
+    ideas: [],
+    settings: { theme: 'light', lastBackup: null }
+  };
+}
+
+async function saveState() {
+  if (!cryptoKey || !state) return;
+  try {
+    const json = JSON.stringify(state);
+    const encrypted = await encryptData(json, cryptoKey);
+    localStorage.setItem('journal_data', encrypted);
+  } catch (e) {
+    console.error('Save failed:', e);
+    showToast('Failed to save data');
+  }
+}
+
+function debouncedSave() {
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(saveState, 100);
+}
+
+async function loadState(password) {
+  try {
+    const saltB64 = localStorage.getItem('journal_salt');
+    const dataB64 = localStorage.getItem('journal_data');
+    if (!saltB64 || !dataB64) return false;
+    salt = base64ToUint8(saltB64);
+    cryptoKey = await deriveKey(password, salt);
+    const json = await decryptData(dataB64, cryptoKey);
+    state = JSON.parse(json);
+    if (state._verify !== 'JOURNAL_V1') throw new Error('Verify failed');
+    currentPassword = password;
+    return true;
+  } catch (e) {
+    cryptoKey = null;
+    salt = null;
+    return false;
+  }
+}
+
+async function createAccount(password) {
+  salt = crypto.getRandomValues(new Uint8Array(32));
+  cryptoKey = await deriveKey(password, salt);
+  state = defaultState();
+  localStorage.setItem('journal_salt', uint8ToBase64(salt));
+  await saveState();
+  currentPassword = password;
+}
+
+// ===========================
+// DATE FORMATTING
+// ===========================
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function formatDateHeader(date) {
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (sameDay(date, now)) return 'Today';
+  if (sameDay(date, yesterday)) return 'Yesterday';
+  return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined });
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+// ===========================
+// UI RENDERING
+// ===========================
+function renderChat() {
+  const container = document.getElementById('chatMessages');
+  container.innerHTML = '';
+
+  if (state.entries.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+        <p>What's on your mind?</p>
+      </div>`;
+    return;
+  }
+
+  let lastDate = null;
+  let lastPov = null;
+
+  state.entries.forEach((entry, i) => {
+    const date = new Date(entry.timestamp);
+    const dateStr = date.toDateString();
+
+    if (dateStr !== lastDate) {
+      const h = document.createElement('div');
+      h.className = 'date-header';
+      h.textContent = formatDateHeader(date);
+      container.appendChild(h);
+      lastDate = dateStr;
+      lastPov = null;
+    }
+
+    const wrapper = document.createElement('div');
+    const side = entry.pov === 0 ? 'self' : 'other';
+    wrapper.className = `bubble-wrapper ${side}`;
+    if (lastPov !== null && lastPov !== entry.pov) wrapper.classList.add('gap');
+
+    const bubble = document.createElement('div');
+    bubble.className = `bubble ${side}`;
+    bubble.textContent = entry.text;
+
+    const time = document.createElement('div');
+    time.className = 'bubble-time';
+    time.textContent = formatTime(date);
+
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.textContent = 'Delete';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      state.entries.splice(i, 1);
+      debouncedSave();
+      renderChat();
+    };
+
+    wrapper.onclick = () => {
+      if (selectedBubble && selectedBubble !== wrapper) {
+        selectedBubble.classList.remove('selected', 'show-time');
+      }
+      wrapper.classList.toggle('selected');
+      wrapper.classList.toggle('show-time');
+      selectedBubble = wrapper.classList.contains('selected') ? wrapper : null;
+    };
+
+    wrapper.appendChild(bubble);
+    wrapper.appendChild(time);
+    wrapper.appendChild(del);
+    container.appendChild(wrapper);
+    lastPov = entry.pov;
+  });
+
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  const area = document.getElementById('chatArea');
+  requestAnimationFrame(() => {
+    area.scrollTop = area.scrollHeight;
+  });
+}
+
+function renderIdeas() {
+  const list = document.getElementById('ideasList');
+  list.innerHTML = '';
+
+  if (state.ideas.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state" style="padding-top:60px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/><line x1="9" y1="21" x2="15" y2="21"/>
+        </svg>
+        <p>Capture your ideas here</p>
+      </div>`;
+    return;
+  }
+
+  state.ideas.forEach((idea, i) => {
+    const card = document.createElement('div');
+    card.className = 'idea-card';
+
+    const text = document.createElement('div');
+    text.className = 'idea-text';
+    text.textContent = idea.text;
+
+    const meta = document.createElement('div');
+    meta.className = 'idea-meta';
+
+    const time = document.createElement('span');
+    time.className = 'idea-time';
+    const d = new Date(idea.timestamp);
+    time.textContent = formatDateHeader(d) + ' ' + formatTime(d);
+
+    const del = document.createElement('button');
+    del.className = 'idea-del';
+    del.textContent = 'Delete';
+    del.onclick = (e) => {
+      e.stopPropagation();
+      state.ideas.splice(i, 1);
+      debouncedSave();
+      renderIdeas();
+    };
+
+    meta.appendChild(time);
+    meta.appendChild(del);
+    card.appendChild(text);
+    card.appendChild(meta);
+    list.appendChild(card);
+  });
+}
+
+function renderSearch(query) {
+  const results = document.getElementById('searchResults');
+  if (!query || !query.trim()) {
+    results.innerHTML = '<div class="search-empty">Type to search your journal</div>';
+    return;
+  }
+
+  const q = query.trim().toLowerCase();
+  const matches = [];
+
+  state.entries.forEach(entry => {
+    if (entry.text.toLowerCase().includes(q)) {
+      matches.push({ type: 'chat', text: entry.text, timestamp: entry.timestamp, pov: entry.pov });
+    }
+  });
+
+  state.ideas.forEach(idea => {
+    if (idea.text.toLowerCase().includes(q)) {
+      matches.push({ type: 'idea', text: idea.text, timestamp: idea.timestamp });
+    }
+  });
+
+  matches.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  if (matches.length === 0) {
+    results.innerHTML = '<div class="search-empty">No results found</div>';
+    return;
+  }
+
+  results.innerHTML = '';
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`(${escaped})`, 'gi');
+
+  matches.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'search-result';
+
+    const type = document.createElement('div');
+    type.className = 'search-result-type';
+    type.textContent = m.type === 'chat' ? 'Chat Entry' : 'Idea';
+
+    const text = document.createElement('div');
+    text.className = 'search-result-text';
+    text.innerHTML = escapeHtml(m.text).replace(regex, '<mark>$1</mark>');
+
+    const time = document.createElement('div');
+    time.className = 'search-result-time';
+    const d = new Date(m.timestamp);
+    time.textContent = formatDateHeader(d) + ' ' + formatTime(d);
+
+    div.appendChild(type);
+    div.appendChild(text);
+    div.appendChild(time);
+    results.appendChild(div);
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderCurrentTab() {
+  if (activeTab === 'chat') renderChat();
+  else if (activeTab === 'ideas') renderIdeas();
+}
+
+// ===========================
+// TAB SWITCHING
+// ===========================
+function switchTab(tab) {
+  activeTab = tab;
+
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab + 'Tab').classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+
+  const titles = { chat: 'Chat', ideas: 'Ideas', upload: 'Backup', search: 'Search' };
+  document.getElementById('tabTitle').textContent = titles[tab];
+
+  const povArea = document.getElementById('povArea');
+  povArea.style.visibility = tab === 'chat' ? 'visible' : 'hidden';
+
+  if (selectedBubble) {
+    selectedBubble.classList.remove('selected', 'show-time');
+    selectedBubble = null;
+  }
+
+  if (tab === 'chat') renderChat();
+  else if (tab === 'ideas') renderIdeas();
+  else if (tab === 'search') {
+    document.getElementById('searchInput').value = '';
+    renderSearch('');
+    setTimeout(() => document.getElementById('searchInput').focus(), 100);
+  }
+}
+
+// ===========================
+// ACTIONS
+// ===========================
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const pov = document.getElementById('povToggle').checked ? 1 : 0;
+  state.entries.push({
+    id: Date.now(),
+    text,
+    pov,
+    timestamp: new Date().toISOString()
+  });
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('chatSend').disabled = true;
+  debouncedSave();
+  renderChat();
+}
+
+function addIdea() {
+  const input = document.getElementById('ideaInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  state.ideas.push({
+    id: Date.now(),
+    text,
+    timestamp: new Date().toISOString()
+  });
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('ideaSend').disabled = true;
+  debouncedSave();
+  renderIdeas();
+}
+
+async function exportData() {
+  try {
+    const exportObj = {
+      version: 1,
+      salt: localStorage.getItem('journal_salt'),
+      data: localStorage.getItem('journal_data'),
+      exported: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'journal-backup-' + new Date().toISOString().split('T')[0] + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    state.settings.lastBackup = new Date().toISOString();
+    debouncedSave();
+    document.getElementById('backupBanner').hidden = true;
+    showToast('Backup exported');
+  } catch (e) {
+    showToast('Export failed');
+  }
+}
+
+async function importData(file) {
+  try {
+    const text = await file.text();
+    const obj = JSON.parse(text);
+    if (!obj.version || !obj.salt || !obj.data) throw new Error('Invalid file');
+
+    const importSalt = base64ToUint8(obj.salt);
+    const importKey = await deriveKey(currentPassword, importSalt);
+    const json = await decryptData(obj.data, importKey);
+    const imported = JSON.parse(json);
+    if (imported._verify !== 'JOURNAL_V1') throw new Error('Verify failed');
+
+    state = imported;
+    await saveState();
+    applyTheme();
+    renderCurrentTab();
+    showToast('Backup imported successfully');
+  } catch (e) {
+    showToast('Import failed - check that your password matches the backup');
+  }
+}
+
+// ===========================
+// THEME
+// ===========================
+function applyTheme() {
+  const theme = state.settings.theme || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeToggle').checked = theme === 'dark';
+  document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#000000' : '#f2f2f7';
+}
+
+function toggleTheme() {
+  state.settings.theme = document.getElementById('themeToggle').checked ? 'dark' : 'light';
+  applyTheme();
+  debouncedSave();
+}
+
+// ===========================
+// SETTINGS
+// ===========================
+function openSettings() {
+  document.getElementById('settingsModal').classList.add('active');
+  closePwChange();
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+  closePwChange();
+}
+
+function openPwChange() {
+  document.getElementById('pwChangeSection').classList.add('active');
+  document.getElementById('changePwBtn').hidden = true;
+}
+
+function closePwChange() {
+  document.getElementById('pwChangeSection').classList.remove('active');
+  document.getElementById('changePwBtn').hidden = false;
+  document.getElementById('oldPwInput').value = '';
+  document.getElementById('newPwInput').value = '';
+  document.getElementById('confirmPwInput').value = '';
+}
+
+async function submitPwChange() {
+  const oldPw = document.getElementById('oldPwInput').value;
+  const newPw = document.getElementById('newPwInput').value;
+  const confirmPw = document.getElementById('confirmPwInput').value;
+
+  if (!oldPw || !newPw) { showToast('Please fill in all fields'); return; }
+  if (newPw !== confirmPw) { showToast('New passwords do not match'); return; }
+  if (newPw.length < 1) { showToast('Password cannot be empty'); return; }
+
+  // Verify old password
+  try {
+    const testSalt = base64ToUint8(localStorage.getItem('journal_salt'));
+    const testKey = await deriveKey(oldPw, testSalt);
+    await decryptData(localStorage.getItem('journal_data'), testKey);
+  } catch {
+    showToast('Current password is incorrect');
+    return;
+  }
+
+  // Re-encrypt with new password
+  salt = crypto.getRandomValues(new Uint8Array(32));
+  cryptoKey = await deriveKey(newPw, salt);
+  currentPassword = newPw;
+  localStorage.setItem('journal_salt', uint8ToBase64(salt));
+  await saveState();
+
+  closePwChange();
+  showToast('Password changed');
+}
+
+// ===========================
+// TOAST
+// ===========================
+function showToast(message) {
+  const existing = document.querySelector('.toast');
+  if (existing) existing.remove();
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = message;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => t.classList.add('show'));
+  });
+  setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+  }, 2500);
+}
+
+// ===========================
+// BACKUP REMINDER
+// ===========================
+function checkBackupReminder() {
+  if (!state.settings.lastBackup) {
+    if (state.entries.length > 0 || state.ideas.length > 0) {
+      document.getElementById('backupBanner').hidden = false;
+    }
+    return;
+  }
+  const days = (Date.now() - new Date(state.settings.lastBackup).getTime()) / (1000 * 60 * 60 * 24);
+  if (days > 5 && (state.entries.length > 0 || state.ideas.length > 0)) {
+    document.getElementById('backupBanner').hidden = false;
+  }
+}
+
+// ===========================
+// AUTO-RESIZE TEXTAREA
+// ===========================
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ===========================
+// POV TOGGLE
+// ===========================
+function updatePovLabel() {
+  const on = document.getElementById('povToggle').checked;
+  document.getElementById('povLabel').textContent = on ? 'Inner Self' : 'Me';
+}
+
+// ===========================
+// PWA MANIFEST
+// ===========================
+function setupManifest() {
+  const icon = "data:image/svg+xml," + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">' +
+    '<rect width="100" height="100" rx="22" fill="#007AFF"/>' +
+    '<path d="M50 25a18 18 0 00-10 33v5h20v-5A18 18 0 0050 25z" fill="none" stroke="white" stroke-width="4"/>' +
+    '<line x1="40" y1="70" x2="60" y2="70" stroke="white" stroke-width="4" stroke-linecap="round"/>' +
+    '</svg>'
+  );
+  const manifest = {
+    name: 'Journal',
+    short_name: 'Journal',
+    description: 'Private encrypted journal',
+    start_url: location.href.split('?')[0],
+    display: 'standalone',
+    background_color: '#f2f2f7',
+    theme_color: '#f2f2f7',
+    icons: [{ src: icon, sizes: 'any', type: 'image/svg+xml', purpose: 'any' }]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+  document.getElementById('manifest-link').href = URL.createObjectURL(blob);
+}
+
+// ===========================
+// INITIALIZATION
+// ===========================
+function init() {
+  // Check localStorage availability
+  try {
+    localStorage.setItem('__test', '1');
+    localStorage.removeItem('__test');
+  } catch {
+    document.getElementById('lockScreen').innerHTML =
+      '<div class="lock-container"><h1>Storage Unavailable</h1><p class="lock-subtitle">This app requires localStorage. Please ensure you are not in private browsing mode.</p></div>';
+    return;
+  }
+
+  setupManifest();
+
+  const isReturning = !!localStorage.getItem('journal_salt');
+
+  if (isReturning) {
+    document.getElementById('confirmInput').hidden = true;
+    document.getElementById('lockSubtitle').textContent = 'Enter your password to unlock';
+    document.getElementById('lockBtn').textContent = 'Unlock';
+  }
+
+  // Lock screen handlers
+  const lockBtn = document.getElementById('lockBtn');
+  const pwInput = document.getElementById('passwordInput');
+  const confirmInput = document.getElementById('confirmInput');
+  const lockError = document.getElementById('lockError');
+
+  async function handleUnlock() {
+    const pw = pwInput.value;
+    lockError.textContent = '';
+    lockBtn.disabled = true;
+    lockBtn.textContent = isReturning ? 'Unlocking...' : 'Setting up...';
+
+    try {
+      if (isReturning) {
+        if (!pw) { lockError.textContent = 'Please enter your password'; return; }
+        const ok = await loadState(pw);
+        if (!ok) { lockError.textContent = 'Wrong password'; return; }
+      } else {
+        if (!pw) { lockError.textContent = 'Please enter a password'; return; }
+        if (pw !== confirmInput.value) { lockError.textContent = 'Passwords do not match'; return; }
+        await createAccount(pw);
+      }
+
+      document.getElementById('lockScreen').hidden = true;
+      document.getElementById('app').hidden = false;
+      applyTheme();
+      renderChat();
+      checkBackupReminder();
+    } catch (e) {
+      lockError.textContent = 'An error occurred. Please try again.';
+    } finally {
+      lockBtn.disabled = false;
+      lockBtn.textContent = isReturning ? 'Unlock' : 'Set Password';
+    }
+  }
+
+  lockBtn.onclick = handleUnlock;
+  pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { if (isReturning) handleUnlock(); else confirmInput.focus(); } });
+  confirmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleUnlock(); });
+
+  // Tab nav
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.onclick = () => switchTab(btn.dataset.tab);
+  });
+
+  // Chat input
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
+  chatInput.addEventListener('input', () => {
+    autoResize(chatInput);
+    chatSend.disabled = !chatInput.value.trim();
+  });
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  chatInput.addEventListener('focus', () => setTimeout(scrollToBottom, 300));
+  chatSend.onclick = sendMessage;
+
+  // Ideas input
+  const ideaInput = document.getElementById('ideaInput');
+  const ideaSend = document.getElementById('ideaSend');
+  ideaInput.addEventListener('input', () => {
+    autoResize(ideaInput);
+    ideaSend.disabled = !ideaInput.value.trim();
+  });
+  ideaInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addIdea(); }
+  });
+  ideaSend.onclick = addIdea;
+
+  // POV toggle
+  document.getElementById('povToggle').addEventListener('change', updatePovLabel);
+
+  // Search
+  let searchTimer;
+  document.getElementById('searchInput').addEventListener('input', (e) => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => renderSearch(e.target.value), 150);
+  });
+
+  // Settings
+  document.getElementById('settingsOpen').onclick = openSettings;
+  document.getElementById('settingsClose').onclick = closeSettings;
+  document.getElementById('settingsModal').onclick = (e) => {
+    if (e.target === e.currentTarget) closeSettings();
+  };
+  document.getElementById('themeToggle').addEventListener('change', toggleTheme);
+  document.getElementById('settingsExport').onclick = exportData;
+  document.getElementById('settingsImport').onclick = () => document.getElementById('importFile').click();
+
+  // Upload tab buttons
+  document.getElementById('exportBtn').onclick = exportData;
+  document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    if (e.target.files[0]) { importData(e.target.files[0]); e.target.value = ''; }
+  });
+
+  // Change password
+  document.getElementById('changePwBtn').onclick = openPwChange;
+  document.getElementById('pwChangeCancel').onclick = closePwChange;
+  document.getElementById('pwChangeSubmit').onclick = submitPwChange;
+
+  // Backup banner dismiss
+  document.getElementById('backupDismiss').onclick = () => {
+    document.getElementById('backupBanner').hidden = true;
+  };
+
+  // Keyboard shortcut
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSettings();
+  });
+
+  // Click outside bubbles to deselect
+  document.getElementById('chatArea').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget || e.target.id === 'chatCard' || e.target.id === 'chatMessages') {
+      if (selectedBubble) {
+        selectedBubble.classList.remove('selected', 'show-time');
+        selectedBubble = null;
+      }
+    }
+  });
+
+  // Prevent network requests - override fetch and XMLHttpRequest
+  const origFetch = window.fetch;
+  window.fetch = function() {
+    console.warn('Network requests are blocked in this app');
+    return Promise.reject(new Error('Network blocked'));
+  };
+  const origXHR = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function() {
+    console.warn('Network requests are blocked in this app');
+    throw new Error('Network blocked');
+  };
+
+  // Focus password input
+  setTimeout(() => pwInput.focus(), 100);
+}
+
+// Start
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
