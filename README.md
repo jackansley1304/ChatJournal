@@ -24,7 +24,7 @@ A private, encrypted journal that lives entirely in your browser. No servers, no
 
 ## How to Use
 
-1. Download `journal.html`
+1. Download `index.html`
 2. Open it in any modern browser
 3. Set a password
 4. Start writing
