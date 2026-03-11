@@ -115,6 +115,7 @@ Contributions are welcome. Some things that would make this better:
 - [ ] Accessibility audit (screen reader support, keyboard navigation)
 - [ ] Optional prompt/question system to guide reflection
 - [ ] Import/export in plaintext (for users who want to move their data elsewhere)
+- [ ] Option to automatic switching from me to inner self after a message
 
 If you're working on a PR, please keep the single-file architecture. The simplicity is a feature, not a limitation.
 
