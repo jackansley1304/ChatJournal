@@ -9,6 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="description" content="Private encrypted journal">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' blob: data:; connect-src 'none';">
 <link rel="manifest" id="manifest-link">
 <title>Journal</title>
 <style>
@@ -712,6 +713,9 @@ let state = null;
 let activeTab = 'chat';
 let selectedBubble = null;
 let saveTimeout = null;
+let failedAttempts = 0;
+let lockoutUntil = 0;
+const MIN_PASSWORD_LENGTH = 8;
 
 function defaultState() {
   return {
@@ -1160,8 +1164,8 @@ async function submitPwChange() {
   const confirmPw = document.getElementById('confirmPwInput').value;
 
   if (!oldPw || !newPw) { showToast('Please fill in all fields'); return; }
+  if (newPw.length < MIN_PASSWORD_LENGTH) { showToast(`Password must be at least ${MIN_PASSWORD_LENGTH} characters`); return; }
   if (newPw !== confirmPw) { showToast('New passwords do not match'); return; }
-  if (newPw.length < 1) { showToast('Password cannot be empty'); return; }
 
   // Verify old password
   try {
@@ -1318,10 +1322,24 @@ async function init() {
     try {
       if (isReturning) {
         if (!pw) { lockError.textContent = 'Please enter your password'; return; }
+        if (Date.now() < lockoutUntil) {
+          const secs = Math.ceil((lockoutUntil - Date.now()) / 1000);
+          lockError.textContent = `Too many attempts. Try again in ${secs}s`;
+          return;
+        }
         const ok = await loadState(pw);
-        if (!ok) { lockError.textContent = 'Wrong password'; return; }
+        if (!ok) {
+          failedAttempts++;
+          if (failedAttempts >= 5) {
+            lockoutUntil = Date.now() + Math.min(failedAttempts * 5000, 60000);
+          }
+          lockError.textContent = 'Wrong password';
+          return;
+        }
+        failedAttempts = 0;
       } else {
         if (!pw) { lockError.textContent = 'Please enter a password'; return; }
+        if (pw.length < MIN_PASSWORD_LENGTH) { lockError.textContent = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`; return; }
         if (pw !== confirmInput.value) { lockError.textContent = 'Passwords do not match'; return; }
         await createAccount(pw);
       }
