@@ -1,4 +1,4 @@
-# Journal
+# Chat Journal
 
 A private, encrypted journal that lives entirely in your browser. No servers, no accounts, no tracking. Just you and your thoughts.
 
