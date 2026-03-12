@@ -95,6 +95,14 @@ input, textarea { font-size: 16px; }
 }
 .lock-container .lock-btn:active { opacity: 0.8; }
 .lock-error { color: var(--danger); font-size: 13px; margin-top: 12px; min-height: 18px; }
+.lock-warning {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: rgba(255,204,0,0.12); border-radius: 10px;
+  padding: 10px 12px; margin-bottom: 16px; text-align: left;
+}
+[data-theme="dark"] .lock-warning { background: rgba(255,204,0,0.1); }
+.lock-warning svg { width: 18px; height: 18px; flex-shrink: 0; color: #FFCC00; margin-top: 1px; }
+.lock-warning span { font-size: 12.5px; color: var(--text-secondary); line-height: 1.4; }
 
 /* App Layout */
 #app {
@@ -135,6 +143,120 @@ input, textarea { font-size: 16px; }
 .tab-title {
   font-size: 28px; font-weight: 700; padding: 8px 20px 10px;
   flex-shrink: 0;
+}
+.tab-title-chat {
+  display: inline-flex; align-items: center; gap: 6px;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border: none; background: none; font: inherit; color: inherit;
+  padding: 0; font-size: 28px; font-weight: 700;
+}
+.tab-title-chat:active { opacity: 0.6; }
+.tab-title-chat .chevron {
+  width: 14px; height: 14px; color: var(--text-secondary);
+  transition: transform 0.2s;
+}
+.tab-title-chat.open .chevron { transform: rotate(180deg); }
+
+/* Chat List Sheet */
+.chatlist-overlay {
+  position: fixed; inset: 0; background: var(--overlay);
+  z-index: 90; opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.chatlist-overlay.active { opacity: 1; pointer-events: auto; }
+.chatlist-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-secondary); border-radius: 16px 16px 0 0;
+  z-index: 91; transform: translateY(100%);
+  transition: transform 0.3s ease;
+  max-height: 70vh; display: flex; flex-direction: column;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  max-width: 480px; margin: 0 auto;
+}
+.chatlist-overlay.active + .chatlist-sheet,
+.chatlist-sheet.active { transform: translateY(0); }
+.chatlist-sheet-handle {
+  width: 36px; height: 5px; background: var(--bg-tertiary);
+  border-radius: 3px; margin: 10px auto 0; flex-shrink: 0;
+}
+.chatlist-sheet-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 20px 10px; flex-shrink: 0;
+}
+.chatlist-sheet-header h3 { font-size: 18px; font-weight: 700; }
+.chatlist-new-btn {
+  background: none; border: none; color: #007AFF;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  padding: 4px 8px; border-radius: 8px;
+}
+.chatlist-new-btn:active { opacity: 0.6; }
+.chatlist-items {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 0 12px 8px; flex: 1;
+}
+.chatlist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 12px; cursor: pointer;
+  transition: background 0.15s; position: relative;
+}
+.chatlist-item:active { background: var(--bg-tertiary); }
+.chatlist-item.active { background: rgba(0,122,255,0.08); }
+.chatlist-item-icon {
+  width: 40px; height: 40px; border-radius: 12px;
+  background: var(--bg-tertiary); display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0;
+}
+.chatlist-item.active .chatlist-item-icon { background: rgba(0,122,255,0.15); }
+.chatlist-item-icon svg { width: 20px; height: 20px; color: var(--text-secondary); }
+.chatlist-item.active .chatlist-item-icon svg { color: #007AFF; }
+.chatlist-item-info { flex: 1; min-width: 0; }
+.chatlist-item-name {
+  font-size: 16px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.chatlist-item-preview {
+  font-size: 13px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-top: 1px;
+}
+.chatlist-item-actions {
+  display: flex; gap: 2px; flex-shrink: 0;
+}
+.chatlist-action-btn {
+  background: none; border: none; cursor: pointer;
+  padding: 6px; border-radius: 8px; color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+}
+.chatlist-action-btn:active { background: var(--bg-tertiary); }
+.chatlist-action-btn.danger { color: var(--danger); }
+.chatlist-action-btn svg { width: 18px; height: 18px; }
+
+/* Inline rename input */
+.chatlist-rename-input {
+  font-size: 16px; font-weight: 600; font-family: inherit;
+  border: 1.5px solid #007AFF; border-radius: 8px;
+  padding: 2px 8px; background: var(--bg-primary);
+  color: var(--text-primary); outline: none; width: 100%;
+}
+
+/* Confirm delete row */
+.chatlist-confirm-delete {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; margin: 0 12px 4px;
+  background: rgba(255,59,48,0.08); border-radius: 10px;
+  font-size: 13px; color: var(--danger); animation: slideUp 0.15s ease;
+}
+[data-theme="dark"] .chatlist-confirm-delete { background: rgba(255,59,48,0.15); }
+.chatlist-confirm-delete span { flex: 1; }
+.chatlist-confirm-delete button {
+  border: none; cursor: pointer; padding: 6px 14px;
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+}
+.chatlist-confirm-delete .cancel-del {
+  background: var(--bg-tertiary); color: var(--text-primary);
+}
+.chatlist-confirm-delete .do-del {
+  background: var(--danger); color: white;
 }
 
 /* Tab Content */
@@ -403,6 +525,69 @@ mark {
   color: inherit; cursor: pointer; padding: 2px 6px; font-size: 13px;
 }
 
+/* Logout Modal */
+.logout-overlay {
+  position: fixed; inset: 0; background: var(--overlay);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  padding: 24px;
+}
+.logout-overlay.active { opacity: 1; pointer-events: auto; }
+.logout-card {
+  background: var(--bg-secondary); border-radius: 16px;
+  width: 100%; max-width: 340px; padding: 28px 24px 20px;
+  transform: scale(0.92) translateY(12px);
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+.logout-overlay.active .logout-card { transform: scale(1) translateY(0); }
+.logout-icon {
+  width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+}
+.logout-icon.warn { background: rgba(255,204,0,0.15); }
+.logout-icon.warn svg { color: #FFCC00; }
+.logout-icon.lock { background: rgba(0,122,255,0.1); }
+.logout-icon.lock svg { color: #007AFF; }
+.logout-icon svg { width: 28px; height: 28px; }
+.logout-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+.logout-subtitle {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.45;
+  margin-bottom: 20px;
+}
+.logout-step { display: none; }
+.logout-step.active { display: block; }
+.logout-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.logout-btn {
+  width: 100%; padding: 13px; border-radius: 12px;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  border: none; transition: opacity 0.2s;
+}
+.logout-btn:active { opacity: 0.75; }
+.logout-btn.primary { background: #007AFF; color: white; }
+.logout-btn.danger { background: #FF3B30; color: white; }
+.logout-btn.secondary { background: var(--bg-tertiary); color: var(--text-primary); }
+.logout-btn.ghost { background: none; color: var(--text-secondary); font-weight: 500; }
+.logout-pw-input {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--border-color);
+  border-radius: 10px; background: var(--bg-primary); color: var(--text-primary);
+  outline: none; margin-bottom: 10px; font-size: 16px; font-family: inherit;
+  text-align: center; transition: border-color 0.2s;
+}
+.logout-pw-input:focus { border-color: #007AFF; }
+.logout-pw-input::placeholder { color: var(--text-tertiary); }
+.logout-error {
+  font-size: 13px; color: var(--danger); min-height: 18px;
+  margin-bottom: 6px;
+}
+.logout-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 12px 0; color: var(--text-tertiary); font-size: 12px;
+}
+.logout-divider::before, .logout-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border-color);
+}
+
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -429,6 +614,12 @@ mark {
     </div>
     <h1>Journal</h1>
     <p class="lock-subtitle" id="lockSubtitle">Set a password to protect your journal</p>
+    <div class="lock-warning" id="lockWarning">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+      <span>If you lose your password, you will lose access to your journal. There is no way to recover it.</span>
+    </div>
     <input type="password" id="passwordInput" placeholder="Password" autocomplete="off">
     <input type="password" id="confirmInput" placeholder="Confirm password" autocomplete="off">
     <button class="lock-btn" id="lockBtn">Set Password</button>
@@ -455,7 +646,7 @@ mark {
   </div>
 
   <!-- Tab Title -->
-  <h1 class="tab-title" id="tabTitle">Chat</h1>
+  <h1 class="tab-title" id="tabTitle"><button class="tab-title-chat" id="chatListToggle" onclick="toggleChatListSheet()">General <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></h1>
 
   <!-- Backup Reminder -->
   <div class="backup-banner" id="backupBanner" hidden>
@@ -550,6 +741,18 @@ mark {
   </nav>
 </div>
 
+<!-- ==================== CHAT LIST SHEET ==================== -->
+<div class="chatlist-overlay" id="chatlistOverlay"></div>
+<div class="chatlist-sheet" id="chatlistSheet">
+  <div class="chatlist-sheet-handle"></div>
+  <div class="chatlist-sheet-header">
+    <h3>Chats</h3>
+    <button class="chatlist-new-btn" id="chatlistNewBtn">+ New</button>
+  </div>
+  <div id="chatlistConfirmArea"></div>
+  <div class="chatlist-items" id="chatlistItems"></div>
+</div>
+
 <!-- ==================== SETTINGS MODAL ==================== -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-content">
@@ -577,6 +780,11 @@ mark {
     <div class="storage-usage" id="storageUsage" style="text-align:center;font-size:13px;color:var(--text-secondary);padding:8px 0 0;">
       Storage: calculating...
     </div>
+    <div style="padding: 16px 20px 4px;">
+      <p style="font-size:13px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Account</p>
+    </div>
+    <button class="setting-btn danger" id="logoutBtn">Log Out</button>
+    <button class="setting-btn danger" id="deleteAccountBtn" style="background:none;">Delete Account</button>
     <div class="pw-change" id="pwChangeSection">
       <input type="password" id="oldPwInput" placeholder="Current password" autocomplete="off">
       <input type="password" id="newPwInput" placeholder="New password" autocomplete="off">
@@ -587,6 +795,108 @@ mark {
       </div>
     </div>
     <div style="height: 8px;"></div>
+  </div>
+</div>
+
+<!-- ==================== LOGOUT MODAL ==================== -->
+<div class="logout-overlay" id="logoutOverlay">
+  <div class="logout-card">
+
+    <!-- Step 1: Do you remember your password? -->
+    <div class="logout-step active" id="logoutStep1">
+      <div class="logout-icon warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <div class="logout-title">Log Out</div>
+      <div class="logout-subtitle">You'll need your password to log back in. Do you remember it?</div>
+      <div class="logout-btns">
+        <button class="logout-btn primary" id="logoutYesRemember">Yes, I remember</button>
+        <button class="logout-btn secondary" id="logoutNoRemember">No, I don't remember</button>
+        <button class="logout-btn ghost" id="logoutCancel1">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Step 2a: Remembers password — export checkbox + confirm -->
+    <div class="logout-step" id="logoutStep2a">
+      <div class="logout-icon warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </div>
+      <div class="logout-title">Before you go</div>
+      <div class="logout-subtitle">Would you like to download a backup of your journal first?</div>
+      <div class="setting-row" style="padding:12px 0; border:none; margin-bottom:10px;">
+        <span style="font-size:14px; text-align:left;">Download backup before logging out</span>
+        <label class="toggle">
+          <input type="checkbox" id="logoutExportCheck" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="logout-btns">
+        <button class="logout-btn danger" id="logoutConfirm">Log Out</button>
+        <button class="logout-btn ghost" id="logoutBack2a">Back</button>
+      </div>
+    </div>
+
+    <!-- Step 2b: Doesn't remember password — change password flow -->
+    <div class="logout-step" id="logoutStep2b">
+      <div class="logout-icon lock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+      </div>
+      <div class="logout-title">Change Password</div>
+      <div class="logout-subtitle">Set a new password so you can log back in.</div>
+      <input type="password" class="logout-pw-input" id="logoutNewPw" placeholder="New password" autocomplete="off">
+      <input type="password" class="logout-pw-input" id="logoutConfirmPw" placeholder="Confirm new password" autocomplete="off">
+      <div class="logout-error" id="logoutPwError"></div>
+      <div class="logout-btns">
+        <button class="logout-btn primary" id="logoutChangePw">Change Password</button>
+        <button class="logout-btn ghost" id="logoutBack2b">Back</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Password changed — backup option + logout -->
+    <div class="logout-step" id="logoutStep3">
+      <div class="logout-icon lock">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <div class="logout-title">Password Changed</div>
+      <div class="logout-subtitle">Your new password is set. You can now log out safely.</div>
+      <div class="setting-row" style="padding:12px 0; border:none; margin-bottom:10px;">
+        <span style="font-size:14px; text-align:left;">Download backup before logging out</span>
+        <label class="toggle">
+          <input type="checkbox" id="logoutExportCheck2" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="logout-btns">
+        <button class="logout-btn danger" id="logoutConfirm2">Log Out</button>
+        <button class="logout-btn ghost" id="logoutCancel3">Stay Logged In</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== DELETE ACCOUNT MODAL ==================== -->
+<div class="logout-overlay" id="deleteAccountOverlay">
+  <div class="logout-card">
+    <div class="logout-icon warn" style="background:rgba(255,59,48,0.12);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#FF3B30" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+      </svg>
+    </div>
+    <div class="logout-title">Delete Account</div>
+    <div class="logout-subtitle">This will permanently erase all your journal entries, ideas, and settings. This cannot be undone.</div>
+    <div class="logout-btns">
+      <button class="logout-btn danger" id="deleteAccountConfirm">Yes, Delete Everything</button>
+      <button class="logout-btn secondary" id="deleteAccountCancel">No, Keep My Data</button>
+    </div>
   </div>
 </div>
 
@@ -715,15 +1025,54 @@ let selectedBubble = null;
 let saveTimeout = null;
 let failedAttempts = 0;
 let lockoutUntil = 0;
+let renamingChatId = null;
+let deletingChatId = null;
 const MIN_PASSWORD_LENGTH = 8;
 
+function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
 function defaultState() {
+  const defaultList = { id: generateId(), name: 'General', entries: [] };
   return {
     _verify: 'JOURNAL_V1',
-    entries: [],
+    chatLists: [defaultList],
+    activeChatListId: defaultList.id,
     ideas: [],
     settings: { theme: 'light', lastBackup: null }
   };
+}
+
+function migrateState() {
+  // Migrate from old entries[] format to chatLists[]
+  if (state.entries && !state.chatLists) {
+    const defaultList = { id: generateId(), name: 'General', entries: state.entries };
+    state.chatLists = [defaultList];
+    state.activeChatListId = defaultList.id;
+    delete state.entries;
+    debouncedSave();
+  }
+  // Ensure at least one chat list exists
+  if (!state.chatLists || state.chatLists.length === 0) {
+    const defaultList = { id: generateId(), name: 'General', entries: [] };
+    state.chatLists = [defaultList];
+    state.activeChatListId = defaultList.id;
+  }
+  // Ensure activeChatListId is valid
+  if (!state.chatLists.find(c => c.id === state.activeChatListId)) {
+    state.activeChatListId = state.chatLists[0].id;
+  }
+}
+
+function getActiveChatList() {
+  return state.chatLists.find(c => c.id === state.activeChatListId) || state.chatLists[0];
+}
+
+function getAllEntries() {
+  const all = [];
+  state.chatLists.forEach(cl => {
+    cl.entries.forEach(e => all.push({ ...e, chatListName: cl.name }));
+  });
+  return all;
 }
 
 async function saveState() {
@@ -797,8 +1146,9 @@ function formatTime(date) {
 function renderChat() {
   const container = document.getElementById('chatMessages');
   container.innerHTML = '';
+  const chatList = getActiveChatList();
 
-  if (state.entries.length === 0) {
+  if (chatList.entries.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -812,7 +1162,7 @@ function renderChat() {
   let lastDate = null;
   let lastPov = null;
 
-  state.entries.forEach((entry, i) => {
+  chatList.entries.forEach((entry, i) => {
     const date = new Date(entry.timestamp);
     const dateStr = date.toDateString();
 
@@ -843,7 +1193,7 @@ function renderChat() {
     del.textContent = 'Delete';
     del.onclick = (e) => {
       e.stopPropagation();
-      state.entries.splice(i, 1);
+      chatList.entries.splice(i, 1);
       debouncedSave();
       renderChat();
     };
@@ -933,10 +1283,12 @@ function renderSearch(query) {
   const q = query.trim().toLowerCase();
   const matches = [];
 
-  state.entries.forEach(entry => {
-    if (entry.text.toLowerCase().includes(q)) {
-      matches.push({ type: 'chat', text: entry.text, timestamp: entry.timestamp, pov: entry.pov });
-    }
+  state.chatLists.forEach(cl => {
+    cl.entries.forEach(entry => {
+      if (entry.text.toLowerCase().includes(q)) {
+        matches.push({ type: 'chat', text: entry.text, timestamp: entry.timestamp, pov: entry.pov, chatListName: cl.name });
+      }
+    });
   });
 
   state.ideas.forEach(idea => {
@@ -962,7 +1314,7 @@ function renderSearch(query) {
 
     const type = document.createElement('div');
     type.className = 'search-result-type';
-    type.textContent = m.type === 'chat' ? 'Chat Entry' : 'Idea';
+    type.textContent = m.type === 'chat' ? (m.chatListName ? m.chatListName : 'Chat Entry') : 'Idea';
 
     const text = document.createElement('div');
     text.className = 'search-result-text';
@@ -1004,8 +1356,13 @@ function switchTab(tab) {
     el.classList.toggle('active', el.dataset.tab === tab);
   });
 
-  const titles = { chat: 'Chat', ideas: 'Ideas', upload: 'Backup', search: 'Search' };
-  document.getElementById('tabTitle').textContent = titles[tab];
+  const tabTitleEl = document.getElementById('tabTitle');
+  if (tab === 'chat') {
+    updateChatTitle();
+  } else {
+    const titles = { ideas: 'Ideas', upload: 'Backup', search: 'Search' };
+    tabTitleEl.textContent = titles[tab];
+  }
 
   const povArea = document.getElementById('povArea');
   povArea.style.visibility = tab === 'chat' ? 'visible' : 'hidden';
@@ -1033,7 +1390,7 @@ function sendMessage() {
   if (!text) return;
 
   const pov = document.getElementById('povToggle').checked ? 1 : 0;
-  state.entries.push({
+  getActiveChatList().entries.push({
     id: Date.now(),
     text,
     pov,
@@ -1105,8 +1462,10 @@ async function importData(file) {
     if (imported._verify !== 'JOURNAL_V1') throw new Error('Verify failed');
 
     state = imported;
+    migrateState();
     await saveState();
     applyTheme();
+    if (activeTab === 'chat') updateChatTitle();
     renderCurrentTab();
     showToast('Backup imported successfully');
   } catch (e) {
@@ -1213,14 +1572,15 @@ function showToast(message) {
 // BACKUP REMINDER
 // ===========================
 function checkBackupReminder() {
+  const hasEntries = state.chatLists.some(cl => cl.entries.length > 0) || state.ideas.length > 0;
   if (!state.settings.lastBackup) {
-    if (state.entries.length > 0 || state.ideas.length > 0) {
+    if (hasEntries) {
       document.getElementById('backupBanner').hidden = false;
     }
     return;
   }
   const days = (Date.now() - new Date(state.settings.lastBackup).getTime()) / (1000 * 60 * 60 * 24);
-  if (days > 5 && (state.entries.length > 0 || state.ideas.length > 0)) {
+  if (days > 5 && hasEntries) {
     document.getElementById('backupBanner').hidden = false;
   }
 }
@@ -1239,6 +1599,350 @@ function autoResize(el) {
 function updatePovLabel() {
   const on = document.getElementById('povToggle').checked;
   document.getElementById('povLabel').textContent = on ? 'Inner Self' : 'Me';
+}
+
+// ===========================
+// LOGOUT FLOW
+// ===========================
+function showLogoutStep(stepId) {
+  document.querySelectorAll('.logout-step').forEach(el => el.classList.remove('active'));
+  document.getElementById(stepId).classList.add('active');
+}
+
+function openLogoutModal() {
+  closeSettings();
+  showLogoutStep('logoutStep1');
+  document.getElementById('logoutExportCheck').checked = true;
+  document.getElementById('logoutExportCheck2').checked = true;
+  document.getElementById('logoutNewPw').value = '';
+  document.getElementById('logoutConfirmPw').value = '';
+  document.getElementById('logoutPwError').textContent = '';
+  document.getElementById('logoutOverlay').classList.add('active');
+}
+
+function closeLogoutModal() {
+  document.getElementById('logoutOverlay').classList.remove('active');
+}
+
+async function performLogout(shouldExport) {
+  if (shouldExport) {
+    await exportData();
+  }
+  // Clear all state
+  cryptoKey = null;
+  salt = null;
+  currentPassword = null;
+  state = null;
+  // Show lock screen and hide app
+  document.getElementById('app').hidden = true;
+  document.getElementById('lockScreen').hidden = false;
+  closeLogoutModal();
+  // Reset lock screen for returning user
+  document.getElementById('confirmInput').hidden = true;
+  document.getElementById('lockWarning').hidden = true;
+  document.getElementById('lockSubtitle').textContent = 'Enter your password to unlock';
+  document.getElementById('lockBtn').textContent = 'Unlock';
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('lockError').textContent = '';
+  failedAttempts = 0;
+  lockoutUntil = 0;
+  // Reset tabs to default
+  activeTab = 'chat';
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('chatTab').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === 'chat');
+  });
+  setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+  showToast('Logged out');
+}
+
+async function logoutChangePw() {
+  const newPw = document.getElementById('logoutNewPw').value;
+  const confirmPw = document.getElementById('logoutConfirmPw').value;
+  const errorEl = document.getElementById('logoutPwError');
+
+  if (!newPw) { errorEl.textContent = 'Please enter a new password'; return; }
+  if (newPw.length < MIN_PASSWORD_LENGTH) {
+    errorEl.textContent = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`;
+    return;
+  }
+  if (newPw !== confirmPw) { errorEl.textContent = 'Passwords do not match'; return; }
+
+  errorEl.textContent = '';
+
+  // Re-encrypt with new password (no old password needed since we're already logged in)
+  salt = crypto.getRandomValues(new Uint8Array(32));
+  cryptoKey = await deriveKey(newPw, salt);
+  currentPassword = newPw;
+  await idbSet('journal_salt', uint8ToBase64(salt));
+  await saveState();
+
+  showLogoutStep('logoutStep3');
+}
+
+// ===========================
+// DELETE ACCOUNT
+// ===========================
+function openDeleteAccountModal() {
+  closeSettings();
+  document.getElementById('deleteAccountOverlay').classList.add('active');
+}
+
+function closeDeleteAccountModal() {
+  document.getElementById('deleteAccountOverlay').classList.remove('active');
+}
+
+async function confirmDeleteAccount() {
+  // Wipe all data from IndexedDB
+  await idbDelete('journal_salt');
+  await idbDelete('journal_data');
+  // Clear in-memory state
+  cryptoKey = null;
+  salt = null;
+  currentPassword = null;
+  state = null;
+  failedAttempts = 0;
+  lockoutUntil = 0;
+  // Close modal
+  closeDeleteAccountModal();
+  // Show lock screen in setup mode
+  document.getElementById('app').hidden = true;
+  document.getElementById('lockScreen').hidden = false;
+  document.getElementById('confirmInput').hidden = false;
+  document.getElementById('lockWarning').hidden = false;
+  document.getElementById('lockSubtitle').textContent = 'Set a password to protect your journal';
+  document.getElementById('lockBtn').textContent = 'Set Password';
+  document.getElementById('passwordInput').value = '';
+  document.getElementById('confirmInput').value = '';
+  document.getElementById('lockError').textContent = '';
+  // Reset tabs
+  activeTab = 'chat';
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('chatTab').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === 'chat');
+  });
+  setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+  showToast('Account deleted');
+}
+
+// ===========================
+// CHAT LIST MANAGEMENT
+// ===========================
+function updateChatTitle() {
+  const tabTitleEl = document.getElementById('tabTitle');
+  const chatList = getActiveChatList();
+  tabTitleEl.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.className = 'tab-title-chat';
+  btn.id = 'chatListToggle';
+  btn.onclick = toggleChatListSheet;
+  btn.textContent = chatList.name;
+  const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  chevron.setAttribute('class', 'chevron');
+  chevron.setAttribute('viewBox', '0 0 24 24');
+  chevron.setAttribute('fill', 'none');
+  chevron.setAttribute('stroke', 'currentColor');
+  chevron.setAttribute('stroke-width', '3');
+  chevron.setAttribute('stroke-linecap', 'round');
+  chevron.setAttribute('stroke-linejoin', 'round');
+  const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  poly.setAttribute('points', '6 9 12 15 18 9');
+  chevron.appendChild(poly);
+  btn.appendChild(document.createTextNode(' '));
+  btn.appendChild(chevron);
+  tabTitleEl.appendChild(btn);
+}
+
+function toggleChatListSheet() {
+  const overlay = document.getElementById('chatlistOverlay');
+  const sheet = document.getElementById('chatlistSheet');
+  const isOpen = overlay.classList.contains('active');
+  if (isOpen) {
+    closeChatListSheet();
+  } else {
+    renamingChatId = null;
+    deletingChatId = null;
+    renderChatListSheet();
+    overlay.classList.add('active');
+    sheet.classList.add('active');
+    const toggle = document.getElementById('chatListToggle');
+    if (toggle) toggle.classList.add('open');
+  }
+}
+
+function closeChatListSheet() {
+  document.getElementById('chatlistOverlay').classList.remove('active');
+  document.getElementById('chatlistSheet').classList.remove('active');
+  const toggle = document.getElementById('chatListToggle');
+  if (toggle) toggle.classList.remove('open');
+  renamingChatId = null;
+  deletingChatId = null;
+}
+
+function renderChatListSheet() {
+  const container = document.getElementById('chatlistItems');
+  const confirmArea = document.getElementById('chatlistConfirmArea');
+  container.innerHTML = '';
+  confirmArea.innerHTML = '';
+
+  if (deletingChatId) {
+    const cl = state.chatLists.find(c => c.id === deletingChatId);
+    if (cl) {
+      const row = document.createElement('div');
+      row.className = 'chatlist-confirm-delete';
+      row.innerHTML = `<span>Delete "${escapeHtml(cl.name)}"? This can't be undone.</span>`;
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'cancel-del';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = () => { deletingChatId = null; renderChatListSheet(); };
+      const delBtn = document.createElement('button');
+      delBtn.className = 'do-del';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => confirmDeleteChatList(deletingChatId);
+      row.appendChild(cancelBtn);
+      row.appendChild(delBtn);
+      confirmArea.appendChild(row);
+    }
+  }
+
+  state.chatLists.forEach(cl => {
+    const item = document.createElement('div');
+    item.className = 'chatlist-item' + (cl.id === state.activeChatListId ? ' active' : '');
+
+    const icon = document.createElement('div');
+    icon.className = 'chatlist-item-icon';
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
+
+    const info = document.createElement('div');
+    info.className = 'chatlist-item-info';
+
+    if (renamingChatId === cl.id) {
+      const input = document.createElement('input');
+      input.className = 'chatlist-rename-input';
+      input.type = 'text';
+      input.value = cl.name;
+      input.maxLength = 40;
+      input.onclick = (e) => e.stopPropagation();
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') { finishRename(cl.id, input.value); }
+        if (e.key === 'Escape') { renamingChatId = null; renderChatListSheet(); }
+      };
+      input.onblur = () => { finishRename(cl.id, input.value); };
+      info.appendChild(input);
+      setTimeout(() => { input.focus(); input.select(); }, 50);
+    } else {
+      const name = document.createElement('div');
+      name.className = 'chatlist-item-name';
+      name.textContent = cl.name;
+      info.appendChild(name);
+
+      const preview = document.createElement('div');
+      preview.className = 'chatlist-item-preview';
+      if (cl.entries.length > 0) {
+        const last = cl.entries[cl.entries.length - 1];
+        preview.textContent = cl.entries.length + ' message' + (cl.entries.length !== 1 ? 's' : '') + ' · ' + last.text.slice(0, 40);
+      } else {
+        preview.textContent = 'No messages';
+      }
+      info.appendChild(preview);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'chatlist-item-actions';
+
+    // Rename button
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'chatlist-action-btn';
+    renameBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    renameBtn.title = 'Rename';
+    renameBtn.onclick = (e) => {
+      e.stopPropagation();
+      renamingChatId = cl.id;
+      deletingChatId = null;
+      renderChatListSheet();
+    };
+
+    // Delete button (only if more than one list)
+    const delBtn = document.createElement('button');
+    delBtn.className = 'chatlist-action-btn danger';
+    delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
+    delBtn.title = 'Delete';
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
+      deletingChatId = cl.id;
+      renamingChatId = null;
+      renderChatListSheet();
+    };
+
+    actions.appendChild(renameBtn);
+    if (state.chatLists.length > 1) {
+      actions.appendChild(delBtn);
+    }
+
+    item.appendChild(icon);
+    item.appendChild(info);
+    item.appendChild(actions);
+
+    item.onclick = () => {
+      if (renamingChatId === cl.id) return;
+      switchChatList(cl.id);
+    };
+
+    container.appendChild(item);
+  });
+}
+
+function switchChatList(id) {
+  state.activeChatListId = id;
+  debouncedSave();
+  updateChatTitle();
+  renderChat();
+  closeChatListSheet();
+}
+
+function createNewChatList() {
+  const name = 'Chat ' + (state.chatLists.length + 1);
+  const newList = { id: generateId(), name, entries: [] };
+  state.chatLists.push(newList);
+  state.activeChatListId = newList.id;
+  debouncedSave();
+  updateChatTitle();
+  renderChat();
+  // Keep sheet open and start renaming
+  renamingChatId = newList.id;
+  renderChatListSheet();
+}
+
+function finishRename(id, newName) {
+  const trimmed = newName.trim();
+  if (trimmed) {
+    const cl = state.chatLists.find(c => c.id === id);
+    if (cl) {
+      cl.name = trimmed;
+      debouncedSave();
+      if (id === state.activeChatListId) updateChatTitle();
+    }
+  }
+  renamingChatId = null;
+  renderChatListSheet();
+}
+
+function confirmDeleteChatList(id) {
+  const idx = state.chatLists.findIndex(c => c.id === id);
+  if (idx === -1 || state.chatLists.length <= 1) return;
+
+  state.chatLists.splice(idx, 1);
+  if (state.activeChatListId === id) {
+    state.activeChatListId = state.chatLists[0].id;
+    updateChatTitle();
+    renderChat();
+  }
+  deletingChatId = null;
+  debouncedSave();
+  renderChatListSheet();
+  showToast('Chat deleted');
 }
 
 // ===========================
@@ -1299,10 +2003,11 @@ async function init() {
 
   setupManifest();
 
-  const isReturning = !!(await idbGet('journal_salt'));
+  let isReturning = !!(await idbGet('journal_salt'));
 
   if (isReturning) {
     document.getElementById('confirmInput').hidden = true;
+    document.getElementById('lockWarning').hidden = true;
     document.getElementById('lockSubtitle').textContent = 'Enter your password to unlock';
     document.getElementById('lockBtn').textContent = 'Unlock';
   }
@@ -1314,6 +2019,8 @@ async function init() {
   const lockError = document.getElementById('lockError');
 
   async function handleUnlock() {
+    // Re-check in case user logged out and back
+    isReturning = !!(await idbGet('journal_salt'));
     const pw = pwInput.value;
     lockError.textContent = '';
     lockBtn.disabled = true;
@@ -1346,7 +2053,9 @@ async function init() {
 
       document.getElementById('lockScreen').hidden = true;
       document.getElementById('app').hidden = false;
+      migrateState();
       applyTheme();
+      updateChatTitle();
       renderChat();
       checkBackupReminder();
     } catch (e) {
@@ -1423,14 +2132,41 @@ async function init() {
   document.getElementById('pwChangeCancel').onclick = closePwChange;
   document.getElementById('pwChangeSubmit').onclick = submitPwChange;
 
+  // Logout flow
+  document.getElementById('logoutBtn').onclick = openLogoutModal;
+  document.getElementById('logoutCancel1').onclick = closeLogoutModal;
+  document.getElementById('logoutYesRemember').onclick = () => showLogoutStep('logoutStep2a');
+  document.getElementById('logoutNoRemember').onclick = () => showLogoutStep('logoutStep2b');
+  document.getElementById('logoutBack2a').onclick = () => showLogoutStep('logoutStep1');
+  document.getElementById('logoutBack2b').onclick = () => showLogoutStep('logoutStep1');
+  document.getElementById('logoutConfirm').onclick = () => performLogout(document.getElementById('logoutExportCheck').checked);
+  document.getElementById('logoutChangePw').onclick = logoutChangePw;
+  document.getElementById('logoutConfirm2').onclick = () => performLogout(document.getElementById('logoutExportCheck2').checked);
+  document.getElementById('logoutCancel3').onclick = closeLogoutModal;
+  document.getElementById('logoutOverlay').onclick = (e) => {
+    if (e.target === e.currentTarget) closeLogoutModal();
+  };
+
+  // Delete account
+  document.getElementById('deleteAccountBtn').onclick = openDeleteAccountModal;
+  document.getElementById('deleteAccountCancel').onclick = closeDeleteAccountModal;
+  document.getElementById('deleteAccountConfirm').onclick = confirmDeleteAccount;
+  document.getElementById('deleteAccountOverlay').onclick = (e) => {
+    if (e.target === e.currentTarget) closeDeleteAccountModal();
+  };
+
   // Backup banner dismiss
   document.getElementById('backupDismiss').onclick = () => {
     document.getElementById('backupBanner').hidden = true;
   };
 
+  // Chat list sheet
+  document.getElementById('chatlistOverlay').onclick = closeChatListSheet;
+  document.getElementById('chatlistNewBtn').onclick = createNewChatList;
+
   // Keyboard shortcut
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeSettings();
+    if (e.key === 'Escape') { closeDeleteAccountModal(); closeLogoutModal(); closeChatListSheet(); closeSettings(); }
   });
 
   // Click outside bubbles to deselect
