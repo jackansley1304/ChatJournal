@@ -19,6 +19,7 @@ A private, encrypted journal that lives entirely in your browser. No servers, no
 - **PWA support** — Install as a standalone app on your phone or desktop
 - **Dark mode** — System-respecting theme toggle
 - **No dependencies** — Single HTML file, no build step, no frameworks
+- **Multi Chat lists** - Multi chat lists for processing different things
 
 ---
 
@@ -114,6 +115,7 @@ Contributions are welcome. Some things that would make this better:
 
 - [x] Minimum password length enforcement
 - [x] Rate limiting on password attempts
+- [x] Multi Chat list 
 - [ ] PBKDF2 iteration count increase (OWASP recommends 600,000 for SHA-256)
 - [ ] Storage usage indicator visible outside settings
 - [ ] Accessibility audit (screen reader support, keyboard navigation)
