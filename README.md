@@ -116,7 +116,7 @@ Contributions are welcome. Some things that would make this better:
 - [x] Minimum password length enforcement
 - [x] Rate limiting on password attempts
 - [x] Multi Chat list 
-- [ ] PBKDF2 iteration count increase (OWASP recommends 600,000 for SHA-256)
+- [x] PBKDF2 iteration count increase (OWASP recommends 600,000 for SHA-256)
 - [ ] Storage usage indicator visible outside settings
 - [ ] Accessibility audit (screen reader support, keyboard navigation)
 - [ ] Optional prompt/question system to guide reflection
