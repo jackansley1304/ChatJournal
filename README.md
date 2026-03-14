@@ -40,57 +40,20 @@ That's it. No installation, no server, no configuration.
 To install as a phone app: open the file in your browser, tap "Add to Home Screen." 
 
 ---
+The Psychology Behind Two-Voice Journaling: 
 
-## The Psychology Behind Two-Voice Journaling
+- Internal Family Systems (IFS): Your mind has multiple "parts" — writing as them (not about them) facilitates self-dialogue.
+- Narrative Therapy: Externalizing a thought by giving it a separate voice helps you step outside it.
+- Expressive Writing (Pennebaker): Translating chaotic emotions into structured language improves psychological and physical outcomes.
+- Chat Format: Conversational bubbles feel lower-pressure than a blank page and create natural turn-taking.
 
-The "Me / Inner Self" toggle isn't a gimmick — it's been in several evidence-based therapeutic approaches.
+Honest Limitations:
 
-### Externalizing Internal Dialogue
-
-Traditional journaling asks you to write *about* your thoughts. This app asks you to write *as* different parts of yourself. That distinction matters.
-
-**Internal Family Systems (IFS)** therapy is built around the idea that the mind contains multiple "parts" — a protective part, a vulnerable part, a critical part — and that healing comes from facilitating dialogue between them. The two-voice interface provides a lightweight structure for this kind of self-dialogue.
-
-**Narrative therapy** uses a technique called externalization, where you separate yourself from the problem by giving it a voice or identity. Writing from "Inner Self" creates that separation naturally — you're no longer trapped inside the thought, you're in conversation with it.
-
-### Expressive Writing Research
-
-James Pennebaker's research on expressive writing (spanning from the 1980s to present) has consistently shown that writing about emotional experiences improves both psychological and physical health outcomes. The key mechanism appears to be **cognitive processing** — the act of translating chaotic internal experience into structured language.
-
-The chat format encourages shorter, more frequent entries compared to traditional journaling, which can lower the barrier to consistent practice.
-
-### The Chat Format Itself
-
-There's a reason people process emotions through texting. Chat interfaces feel conversational and low-pressure compared to a blank page. The bubble format creates natural turn-taking, which can help you move from venting to reflection without the structure feeling imposed.
-
----
-
-## Risks and Honest Limitations
-
-This tool can help, but it can also hurt if misused. 
-
-### Psychological Risks
-
-- **Rumination vs. processing.** There is a well-documented distinction in psychology between productive emotional processing and unproductive rumination (repetitively going over the same distressing thoughts without resolution). This tool can enable either. If you find yourself using the "Inner Self" voice to reinforce self-criticism or spiral into the same painful loop repeatedly, you're ruminating, not processing. The "Inner Self" works best when it's **compassionate rather than critical**.
-
-- **Not a substitute for professional support.** Two-voice journaling can complement therapy, but it cannot replace it. If you're dealing with trauma, severe anxiety, depression, or suicidal thoughts, please reach out to a mental health professional. A journal cannot ask you the question you're avoiding.
-
-- **False sense of resolution.** Writing something down can create a feeling of having "dealt with it" when the underlying issue remains unaddressed. Be honest with yourself about whether you're processing or performing.
-
-- **Echo chamber of one.** Unlike therapy, there's no external perspective here. Both voices are yours. This means your blind spots remain blind spots. Use this alongside other forms of support — friends, professionals, community — not instead of them.
-
-### Security Limitations
-
-- **Password strength is on you.** The app doesn't enforce a minimum password length. A weak password makes the encryption meaningless. Use a strong one.
-
-- **Browser storage isn't bulletproof.** IndexedDB data can be cleared by the browser (storage pressure, clearing site data, OS cleanup). The encrypted backup feature exists for this reason — **use it regularly**.
-
-- **Local-only means no sync.** Your journal lives on the device where you created it. If you lose the device without a backup, the data is gone.
-
-- **Not audited.** The encryption implementation uses the Web Crypto API (which is solid), but this codebase has not been professionally audited. Don't use it for anything where a security breach would be catastrophic.
-
----
-
+- Rumination: The inner voice can reinforce self-criticism instead of processing. 
+- False resolution: Writing it down can feel like "dealing with it".
+- Echo chamber: Both voices are yours — blind spots stay blind.
+- Not therapy: Cannot replace professional support, Complements therapy, doesn't substitute it.
+ 
 ## Privacy Model
 
 The privacy design is intentionally aggressive:
