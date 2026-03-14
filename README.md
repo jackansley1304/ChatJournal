@@ -40,14 +40,14 @@ That's it. No installation, no server, no configuration.
 To install as a phone app: open the file in your browser, tap "Add to Home Screen." 
 
 ---
-The Psychology Behind Two-Voice Journaling: 
+## The Psychology Behind Two-Voice Journaling: 
 
 - Internal Family Systems (IFS): Your mind has multiple "parts" — writing as them (not about them) facilitates self-dialogue.
 - Narrative Therapy: Externalizing a thought by giving it a separate voice helps you step outside it.
 - Expressive Writing (Pennebaker): Translating chaotic emotions into structured language improves psychological and physical outcomes.
 - Chat Format: Conversational bubbles feel lower-pressure than a blank page and create natural turn-taking.
 
-Honest Limitations:
+## Honest Limitations:
 
 - Rumination: The inner voice can reinforce self-criticism instead of processing. 
 - False resolution: Writing it down can feel like "dealing with it".
