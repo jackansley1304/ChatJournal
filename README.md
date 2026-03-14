@@ -43,7 +43,7 @@ To install as a phone app: open the file in your browser, tap "Add to Home Scree
 
 ## The Psychology Behind Two-Voice Journaling
 
-The "Me / Inner Self" toggle isn't a gimmick — it's grounded in several evidence-based therapeutic approaches.
+The "Me / Inner Self" toggle isn't a gimmick — it's been in several evidence-based therapeutic approaches.
 
 ### Externalizing Internal Dialogue
 
@@ -82,8 +82,6 @@ This tool can help, but it can also hurt if misused.
 ### Security Limitations
 
 - **Password strength is on you.** The app doesn't enforce a minimum password length. A weak password makes the encryption meaningless. Use a strong one.
-
-- **No brute-force protection.** There's no rate limiting on password attempts at the lock screen. Someone with physical access to your device could try passwords indefinitely.
 
 - **Browser storage isn't bulletproof.** IndexedDB data can be cleared by the browser (storage pressure, clearing site data, OS cleanup). The encrypted backup feature exists for this reason — **use it regularly**.
 
