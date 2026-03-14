@@ -776,6 +776,23 @@ mark {
     <div style="padding: 16px 20px 4px;">
       <p style="font-size:13px;color:var(--text-secondary);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Security</p>
     </div>
+    <div class="setting-row">
+      <span>Auto-Lock</span>
+      <label class="toggle">
+        <input type="checkbox" id="autoLockToggle">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="setting-row" id="autoLockTimeoutRow" hidden>
+      <span>Lock After</span>
+      <select id="autoLockTimeout" style="padding:6px 10px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-secondary);color:var(--text-primary);font-size:14px;">
+        <option value="60000">1 minute</option>
+        <option value="300000" selected>5 minutes</option>
+        <option value="600000">10 minutes</option>
+        <option value="900000">15 minutes</option>
+        <option value="1800000">30 minutes</option>
+      </select>
+    </div>
     <button class="setting-btn secondary" id="changePwBtn">Change Password</button>
     <div class="storage-usage" id="storageUsage" style="text-align:center;font-size:13px;color:var(--text-secondary);padding:8px 0 0;">
       Storage: calculating...
@@ -1028,6 +1045,7 @@ let failedAttempts = 0;
 let lockoutUntil = 0;
 let renamingChatId = null;
 let deletingChatId = null;
+let autoLockTimer = null;
 const MIN_PASSWORD_LENGTH = 8;
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
@@ -1637,6 +1655,43 @@ function showLogoutStep(stepId) {
   document.getElementById(stepId).classList.add('active');
 }
 
+// ===========================
+// AUTO-LOCK
+// ===========================
+function resetAutoLockTimer() {
+  if (!state || !state.settings.autoLock) return;
+  clearTimeout(autoLockTimer);
+  autoLockTimer = setTimeout(() => {
+    if (state && document.getElementById('lockScreen').hidden) {
+      performLogout(false);
+      showToast('Auto-locked due to inactivity');
+    }
+  }, state.settings.autoLockTimeout || 300000);
+}
+
+function startAutoLock() {
+  const events = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
+  events.forEach(evt => document.addEventListener(evt, resetAutoLockTimer, { passive: true }));
+  resetAutoLockTimer();
+}
+
+function stopAutoLock() {
+  clearTimeout(autoLockTimer);
+  autoLockTimer = null;
+}
+
+function applyAutoLockSetting() {
+  const on = state.settings.autoLock || false;
+  document.getElementById('autoLockToggle').checked = on;
+  document.getElementById('autoLockTimeoutRow').hidden = !on;
+  document.getElementById('autoLockTimeout').value = String(state.settings.autoLockTimeout || 300000);
+  if (on) {
+    startAutoLock();
+  } else {
+    stopAutoLock();
+  }
+}
+
 function openLogoutModal() {
   closeSettings();
   showLogoutStep('logoutStep1');
@@ -1656,6 +1711,7 @@ async function performLogout(shouldExport) {
   if (shouldExport) {
     await exportData();
   }
+  stopAutoLock();
   // Clear all state
   cryptoKey = null;
   salt = null;
@@ -1722,6 +1778,7 @@ function closeDeleteAccountModal() {
 }
 
 async function confirmDeleteAccount() {
+  stopAutoLock();
   // Wipe all data from IndexedDB
   await idbDelete('journal_salt');
   await idbDelete('journal_data');
@@ -2083,6 +2140,7 @@ async function init() {
       document.getElementById('app').hidden = false;
       migrateState();
       applyTheme();
+      applyAutoLockSetting();
       updateChatTitle();
       renderChat();
       checkBackupReminder();
@@ -2145,6 +2203,17 @@ async function init() {
     if (e.target === e.currentTarget) closeSettings();
   };
   document.getElementById('themeToggle').addEventListener('change', toggleTheme);
+  document.getElementById('autoLockToggle').addEventListener('change', () => {
+    state.settings.autoLock = document.getElementById('autoLockToggle').checked;
+    document.getElementById('autoLockTimeoutRow').hidden = !state.settings.autoLock;
+    if (state.settings.autoLock) { startAutoLock(); } else { stopAutoLock(); }
+    debouncedSave();
+  });
+  document.getElementById('autoLockTimeout').addEventListener('change', () => {
+    state.settings.autoLockTimeout = parseInt(document.getElementById('autoLockTimeout').value);
+    resetAutoLockTimer();
+    debouncedSave();
+  });
   document.getElementById('settingsExport').onclick = exportData;
   document.getElementById('settingsImport').onclick = () => document.getElementById('importFile').click();
 
