@@ -967,6 +967,7 @@ async function getStorageUsage() {
 // CRYPTO UTILITIES
 // ===========================
 const PBKDF2_ITERATIONS = 600000;
+const LEGACY_PBKDF2_ITERATIONS = 100000;
 
 function uint8ToBase64(bytes) {
   let s = '';
@@ -981,12 +982,12 @@ function base64ToUint8(b64) {
   return a;
 }
 
-async function deriveKey(password, salt) {
+async function deriveKey(password, salt, iterations = PBKDF2_ITERATIONS) {
   const keyMaterial = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
   );
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
     keyMaterial,
     { name: 'AES-GCM', length: 256 },
     false,
@@ -1098,11 +1099,32 @@ async function loadState(password) {
     const dataB64 = await idbGet('journal_data');
     if (!saltB64 || !dataB64) return false;
     salt = base64ToUint8(saltB64);
-    cryptoKey = await deriveKey(password, salt);
-    const json = await decryptData(dataB64, cryptoKey);
+
+    // Try current iteration count first
+    let json;
+    let needsMigration = false;
+    try {
+      cryptoKey = await deriveKey(password, salt);
+      json = await decryptData(dataB64, cryptoKey);
+    } catch (e) {
+      // Fall back to legacy iteration count
+      cryptoKey = await deriveKey(password, salt, LEGACY_PBKDF2_ITERATIONS);
+      json = await decryptData(dataB64, cryptoKey);
+      needsMigration = true;
+    }
+
     state = JSON.parse(json);
     if (state._verify !== 'JOURNAL_V1') throw new Error('Verify failed');
     currentPassword = password;
+
+    // Re-encrypt with stronger iterations
+    if (needsMigration) {
+      salt = crypto.getRandomValues(new Uint8Array(32));
+      cryptoKey = await deriveKey(password, salt);
+      await idbSet('journal_salt', uint8ToBase64(salt));
+      await saveState();
+    }
+
     return true;
   } catch (e) {
     cryptoKey = null;
@@ -1456,8 +1478,14 @@ async function importData(file) {
     if (!obj.version || !obj.salt || !obj.data) throw new Error('Invalid file');
 
     const importSalt = base64ToUint8(obj.salt);
-    const importKey = await deriveKey(currentPassword, importSalt);
-    const json = await decryptData(obj.data, importKey);
+    let json;
+    try {
+      const importKey = await deriveKey(currentPassword, importSalt);
+      json = await decryptData(obj.data, importKey);
+    } catch (e) {
+      const legacyKey = await deriveKey(currentPassword, importSalt, LEGACY_PBKDF2_ITERATIONS);
+      json = await decryptData(obj.data, legacyKey);
+    }
     const imported = JSON.parse(json);
     if (imported._verify !== 'JOURNAL_V1') throw new Error('Verify failed');
 
