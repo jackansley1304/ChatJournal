@@ -98,7 +98,7 @@ The privacy design is intentionally aggressive:
 | Layer | Implementation |
 |---|---|
 | Encryption | AES-256-GCM via Web Crypto API |
-| Key derivation | PBKDF2 with SHA-256, 100K iterations, random 256-bit salt |
+| Key derivation | PBKDF2 with SHA-256, 600K iterations, random 256-bit salt |
 | Storage | IndexedDB (local only, no cookies) |
 | Network | `fetch()` and `XMLHttpRequest` are overridden and blocked |
 | Telemetry | None. Zero analytics, zero tracking, zero external requests |
