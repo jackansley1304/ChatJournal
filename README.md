@@ -10,7 +10,8 @@ A private, encrypted journal that lives entirely in your browser. No servers, no
 
 ### Features
 
-- **End-to-end encrypted** — AES-256-GCM with PBKDF2 key derivation (100,000 iterations)
+- **End-to-end encrypted** — AES-256-GCM with PBKDF2 key derivation (600,000 iterations)
+- **Auto-Lock** — a new toggle to lock after 1Min, 5Mins, 10Mins, 15Mins, 30Mins of inactivity
 - **Zero network requests** — `fetch` and `XMLHttpRequest` are explicitly blocked in code
 - **Two-voice journaling** — Toggle between "Me" and "Inner Self" perspectives
 - **Ideas tab** — Quick-capture space for fleeting thoughts
@@ -117,6 +118,7 @@ Contributions are welcome. Some things that would make this better:
 - [x] Rate limiting on password attempts
 - [x] Multi Chat list 
 - [x] PBKDF2 iteration count increase (OWASP recommends 600,000 for SHA-256)
+- [x] Auto-Lock feature
 - [ ] Storage usage indicator visible outside settings
 - [ ] Accessibility audit (screen reader support, keyboard navigation)
 - [ ] Optional prompt/question system to guide reflection
