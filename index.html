@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#f2f2f7">
 <meta name="description" content="Private encrypted journal">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' blob: data:; connect-src 'none';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src blob: data:; connect-src 'none'; form-action 'none'; base-uri 'none'; object-src 'none'; frame-src 'none';">
 <link rel="manifest" id="manifest-link">
 <title>Journal</title>
 <style>
@@ -309,12 +309,190 @@ input, textarea { font-size: 16px; }
 .bubble-wrapper:hover .bubble-time,
 .bubble-wrapper.show-time .bubble-time { opacity: 1; }
 .bubble-wrapper.self .bubble-time { text-align: right; }
-.delete-btn {
-  background: none; border: none; color: var(--danger);
+.delete-btn, .reply-btn {
+  background: none; border: none;
   font-size: 12px; cursor: pointer; padding: 2px 6px;
   display: none;
 }
-.bubble-wrapper.selected .delete-btn { display: inline-block; }
+.delete-btn { color: var(--danger); }
+.reply-btn { color: #007AFF; }
+.bubble-wrapper.selected .delete-btn,
+.bubble-wrapper.selected .reply-btn { display: inline-block; }
+.bubble-actions { display: inline-flex; gap: 4px; }
+
+/* Reply quote in bubble */
+.bubble-reply-quote {
+  font-size: 12px; color: var(--text-secondary);
+  border-left: 2px solid var(--text-tertiary);
+  padding: 2px 8px; margin-bottom: 3px;
+  max-width: 78%; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; cursor: pointer; border-radius: 2px;
+  transition: opacity 0.15s;
+}
+.bubble-reply-quote:hover { opacity: 0.7; }
+.bubble-wrapper.self .bubble-reply-quote {
+  align-self: flex-end; border-left-color: rgba(0,122,255,0.4);
+}
+
+/* Reply preview bar */
+.reply-preview-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; margin: 0 16px 4px;
+  background: var(--bg-secondary); border-left: 3px solid #007AFF;
+  border-radius: 8px; flex-shrink: 0; animation: slideUp 0.15s ease;
+}
+.reply-preview-text {
+  flex: 1; font-size: 13px; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.reply-cancel {
+  background: none; border: none; color: var(--text-secondary);
+  cursor: pointer; padding: 2px 4px; font-size: 18px; line-height: 1;
+}
+
+/* Edit button */
+.edit-btn {
+  background: none; border: none; color: #007AFF;
+  font-size: 12px; cursor: pointer; padding: 2px 6px; display: none;
+}
+.bubble-wrapper.selected .edit-btn { display: inline-block; }
+.bubble-edit-input {
+  max-width: 78%; padding: 9px 14px; word-wrap: break-word;
+  white-space: pre-wrap; line-height: 1.35; font-size: 16px;
+  border-radius: 18px; position: relative; border: 2px solid #007AFF;
+  background: var(--input-bg); color: var(--text-primary);
+  outline: none; resize: none; font-family: inherit;
+  min-height: 40px; width: 100%;
+}
+.bubble-edit-actions {
+  display: flex; gap: 6px; margin-top: 4px;
+}
+.bubble-edit-actions button {
+  background: none; border: none; font-size: 12px;
+  cursor: pointer; padding: 2px 8px; border-radius: 6px; font-weight: 600;
+}
+.bubble-edit-actions .edit-save { color: #007AFF; }
+.bubble-edit-actions .edit-cancel { color: var(--text-secondary); }
+
+/* Undo toast */
+.toast-undo {
+  position: fixed; bottom: 100px; left: 50%; z-index: 300;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text-primary); color: var(--bg-primary);
+  padding: 10px 16px; border-radius: 20px; font-size: 14px;
+  opacity: 0; transition: all 0.3s; display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+.toast-undo.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-undo button {
+  background: none; border: none; color: #007AFF;
+  font-weight: 700; font-size: 14px; cursor: pointer; padding: 0;
+}
+
+/* Drag reorder chat list */
+.chatlist-item.dragging {
+  opacity: 0.5; background: var(--bg-tertiary);
+}
+.chatlist-item.drag-over {
+  border-top: 2px solid #007AFF;
+}
+.chatlist-drag-handle {
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; padding: 4px; color: var(--text-tertiary);
+  flex-shrink: 0; touch-action: none;
+}
+.chatlist-drag-handle:active { cursor: grabbing; }
+.chatlist-drag-handle svg { width: 16px; height: 16px; }
+
+/* Idea tags */
+.idea-tags {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;
+}
+.idea-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: rgba(0,122,255,0.1); color: #007AFF;
+  font-weight: 500; cursor: pointer; border: none;
+  transition: opacity 0.15s;
+}
+.idea-tag:hover { opacity: 0.7; }
+[data-theme="dark"] .idea-tag { background: rgba(10,132,255,0.2); color: #0A84FF; }
+.idea-tag-input {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  border: 1px solid #007AFF; background: var(--bg-primary);
+  color: var(--text-primary); outline: none; width: 80px;
+  font-family: inherit;
+}
+.idea-tag-add {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: var(--bg-tertiary); color: var(--text-secondary);
+  border: none; cursor: pointer; font-weight: 500;
+}
+.ideas-filter-bar {
+  display: flex; gap: 6px; padding: 4px 16px 8px;
+  overflow-x: auto; flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+}
+.ideas-filter-btn {
+  font-size: 12px; padding: 4px 12px; border-radius: 14px;
+  border: 1px solid var(--border-color); background: var(--bg-secondary);
+  color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+  font-weight: 500; transition: all 0.15s;
+}
+.ideas-filter-btn.active {
+  background: #007AFF; color: white; border-color: #007AFF;
+}
+
+/* Date range filter */
+.search-filters {
+  display: flex; gap: 8px; margin-bottom: 8px; flex-shrink: 0; flex-wrap: wrap;
+}
+.search-date-input {
+  padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color);
+  background: var(--input-bg); color: var(--text-primary);
+  font-size: 13px; font-family: inherit; outline: none;
+}
+.search-date-input:focus { border-color: var(--bubble-self); }
+.search-date-label {
+  font-size: 12px; color: var(--text-secondary); align-self: center;
+}
+.search-clear-dates {
+  background: none; border: none; color: #007AFF;
+  font-size: 12px; cursor: pointer; padding: 4px 8px; align-self: center;
+  font-weight: 600;
+}
+
+/* Stats tab */
+.stats-area {
+  flex: 1; overflow-y: auto; padding: 8px 16px;
+  -webkit-overflow-scrolling: touch;
+}
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--card-bg); border-radius: 12px;
+  padding: 16px; border: 1px solid var(--border-color);
+  text-align: center;
+}
+.stat-value {
+  font-size: 28px; font-weight: 700; color: #007AFF;
+}
+.stat-label {
+  font-size: 12px; color: var(--text-secondary); margin-top: 2px;
+  font-weight: 500;
+}
+.stat-card.wide { grid-column: span 2; }
+.streak-bar {
+  display: flex; gap: 3px; justify-content: center;
+  margin-top: 8px; flex-wrap: wrap;
+}
+.streak-dot {
+  width: 10px; height: 10px; border-radius: 3px;
+  background: var(--bg-tertiary);
+}
+.streak-dot.active { background: #34C759; }
+.streak-dot.today { outline: 2px solid #007AFF; outline-offset: 1px; }
 
 /* Empty State */
 .empty-state {
@@ -661,6 +839,10 @@ mark {
         <div class="chat-messages" id="chatMessages"></div>
       </div>
     </div>
+    <div class="reply-preview-bar" id="replyPreviewBar" hidden>
+      <span class="reply-preview-text" id="replyPreviewText"></span>
+      <button class="reply-cancel" id="replyCancelBtn">&times;</button>
+    </div>
     <div class="input-bar">
       <textarea id="chatInput" placeholder="Write something..." rows="1"></textarea>
       <button class="send-btn" id="chatSend" disabled aria-label="Send">
@@ -673,6 +855,7 @@ mark {
 
   <!-- Ideas Tab -->
   <div class="tab-content" id="ideasTab">
+    <div class="ideas-filter-bar" id="ideasFilterBar"></div>
     <div class="ideas-list" id="ideasList"></div>
     <div class="input-bar">
       <textarea id="ideaInput" placeholder="Jot an idea..." rows="1"></textarea>
@@ -705,11 +888,23 @@ mark {
     <div class="search-area">
       <div class="search-input-wrap">
         <input type="text" class="search-input" id="searchInput" placeholder="Search entries and ideas...">
+        <div class="search-filters" id="searchFilters">
+          <span class="search-date-label">From</span>
+          <input type="date" class="search-date-input" id="searchDateFrom">
+          <span class="search-date-label">To</span>
+          <input type="date" class="search-date-input" id="searchDateTo">
+          <button class="search-clear-dates" id="searchClearDates">Clear</button>
+        </div>
       </div>
       <div class="search-results" id="searchResults">
         <div class="search-empty">Type to search your journal</div>
       </div>
     </div>
+  </div>
+
+  <!-- Stats Tab -->
+  <div class="tab-content" id="statsTab">
+    <div class="stats-area" id="statsArea"></div>
   </div>
 
   <!-- Bottom Nav -->
@@ -737,6 +932,12 @@ mark {
         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
       </svg>
       <span>Search</span>
+    </button>
+    <button class="nav-item" data-tab="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      <span>Stats</span>
     </button>
   </nav>
 </div>
@@ -909,10 +1110,31 @@ mark {
       </svg>
     </div>
     <div class="logout-title">Delete Account</div>
-    <div class="logout-subtitle">This will permanently erase all your journal entries, ideas, and settings. This cannot be undone.</div>
+    <div class="logout-subtitle">Enter your password to permanently erase all journal entries, ideas, and settings. This cannot be undone.</div>
+    <input type="password" class="logout-pw-input" id="deleteAccountPwInput" placeholder="Enter password to confirm" autocomplete="off">
+    <div class="logout-error" id="deleteAccountPwError"></div>
     <div class="logout-btns">
       <button class="logout-btn danger" id="deleteAccountConfirm">Yes, Delete Everything</button>
       <button class="logout-btn secondary" id="deleteAccountCancel">No, Keep My Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== IMPORT PASSWORD MODAL ==================== -->
+<div class="logout-overlay" id="importPwOverlay">
+  <div class="logout-card">
+    <div class="logout-icon lock">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+      </svg>
+    </div>
+    <div class="logout-title">Import Backup</div>
+    <div class="logout-subtitle">Enter the password that was used when this backup was created.</div>
+    <input type="password" class="logout-pw-input" id="importPwInput" placeholder="Backup password" autocomplete="off">
+    <div class="logout-error" id="importPwError"></div>
+    <div class="logout-btns">
+      <button class="logout-btn primary" id="importPwSubmit">Import</button>
+      <button class="logout-btn ghost" id="importPwCancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -1036,7 +1258,6 @@ async function decryptData(b64, key) {
 // ===========================
 let cryptoKey = null;
 let salt = null;
-let currentPassword = null;
 let state = null;
 let activeTab = 'chat';
 let selectedBubble = null;
@@ -1046,9 +1267,64 @@ let lockoutUntil = 0;
 let renamingChatId = null;
 let deletingChatId = null;
 let autoLockTimer = null;
+let replyToEntry = null;
+let pendingImportFile = null;
+let editingEntryId = null;
+let undoTimer = null;
+let undoData = null;
+let activeIdeaFilter = null;
+let draggedChatItem = null;
 const MIN_PASSWORD_LENGTH = 8;
 
 function generateId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+// Lockout persistence
+async function saveLockoutState() {
+  try { await idbSet('lockout_state', { failedAttempts, lockoutUntil }); } catch {}
+}
+async function loadLockoutState() {
+  try {
+    const data = await idbGet('lockout_state');
+    if (data) { failedAttempts = data.failedAttempts || 0; lockoutUntil = data.lockoutUntil || 0; }
+  } catch {}
+}
+async function clearLockoutState() {
+  failedAttempts = 0; lockoutUntil = 0;
+  try { await idbDelete('lockout_state'); } catch {}
+}
+
+// SVG helper — avoids innerHTML for dynamic SVGs
+function makeSvg(children, sw) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', sw || '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  children.forEach(c => {
+    const el = document.createElementNS(ns, c[0]);
+    for (let i = 1; i < c.length; i += 2) el.setAttribute(c[i], c[i + 1]);
+    svg.appendChild(el);
+  });
+  return svg;
+}
+
+// DOM-based text highlighting for search
+function highlightText(container, text, query) {
+  const lower = text.toLowerCase();
+  const qLower = query.toLowerCase();
+  let lastIdx = 0, idx;
+  while ((idx = lower.indexOf(qLower, lastIdx)) !== -1) {
+    if (idx > lastIdx) container.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
+    const mark = document.createElement('mark');
+    mark.textContent = text.slice(idx, idx + query.length);
+    container.appendChild(mark);
+    lastIdx = idx + query.length;
+  }
+  if (lastIdx < text.length) container.appendChild(document.createTextNode(text.slice(lastIdx)));
+}
 
 function defaultState() {
   const defaultList = { id: generateId(), name: 'General', entries: [] };
@@ -1133,7 +1409,6 @@ async function loadState(password) {
 
     state = JSON.parse(json);
     if (state._verify !== 'JOURNAL_V1') throw new Error('Verify failed');
-    currentPassword = password;
 
     // Re-encrypt with stronger iterations
     if (needsMigration) {
@@ -1157,7 +1432,6 @@ async function createAccount(password) {
   state = defaultState();
   await idbSet('journal_salt', uint8ToBase64(salt));
   await saveState();
-  currentPassword = password;
 }
 
 // ===========================
@@ -1218,25 +1492,127 @@ function renderChat() {
     const wrapper = document.createElement('div');
     const side = entry.pov === 0 ? 'self' : 'other';
     wrapper.className = `bubble-wrapper ${side}`;
+    wrapper.setAttribute('data-entry-id', entry.id);
     if (lastPov !== null && lastPov !== entry.pov) wrapper.classList.add('gap');
+
+    // Reply quote (if replying to another message)
+    if (entry.replyTo) {
+      const original = chatList.entries.find(e => e.id === entry.replyTo);
+      if (original) {
+        const quote = document.createElement('div');
+        quote.className = 'bubble-reply-quote';
+        quote.textContent = original.text.length > 80 ? original.text.slice(0, 80) + '...' : original.text;
+        quote.onclick = (e) => {
+          e.stopPropagation();
+          const origEl = container.querySelector(`[data-entry-id="${original.id}"]`);
+          if (origEl) {
+            origEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            origEl.classList.add('show-time');
+            setTimeout(() => origEl.classList.remove('show-time'), 2000);
+          }
+        };
+        wrapper.appendChild(quote);
+      }
+    }
+
+    // Inline editing mode
+    if (editingEntryId === entry.id) {
+      const editArea = document.createElement('textarea');
+      editArea.className = 'bubble-edit-input';
+      editArea.value = entry.text;
+      editArea.rows = 1;
+      const editActions = document.createElement('div');
+      editActions.className = 'bubble-edit-actions';
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'edit-save';
+      saveBtn.textContent = 'Save';
+      saveBtn.onclick = (e) => {
+        e.stopPropagation();
+        const newText = editArea.value.trim();
+        if (newText && newText !== entry.text) {
+          entry.text = newText;
+          entry.edited = true;
+          debouncedSave();
+        }
+        editingEntryId = null;
+        renderChat();
+      };
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'edit-cancel';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.onclick = (e) => {
+        e.stopPropagation();
+        editingEntryId = null;
+        renderChat();
+      };
+      editActions.appendChild(saveBtn);
+      editActions.appendChild(cancelBtn);
+      wrapper.appendChild(editArea);
+      wrapper.appendChild(editActions);
+      container.appendChild(wrapper);
+      lastPov = entry.pov;
+      setTimeout(() => {
+        editArea.style.height = 'auto';
+        editArea.style.height = editArea.scrollHeight + 'px';
+        editArea.focus();
+        editArea.setSelectionRange(editArea.value.length, editArea.value.length);
+      }, 50);
+      return; // skip normal bubble for this forEach iteration — use 'return' since we're in forEach
+    }
 
     const bubble = document.createElement('div');
     bubble.className = `bubble ${side}`;
     bubble.textContent = entry.text;
+    if (entry.edited) {
+      const editedLabel = document.createElement('span');
+      editedLabel.style.cssText = 'font-size:10px;opacity:0.6;margin-left:6px;';
+      editedLabel.textContent = '(edited)';
+      bubble.appendChild(editedLabel);
+    }
 
     const time = document.createElement('div');
     time.className = 'bubble-time';
     time.textContent = formatTime(date);
+
+    const actions = document.createElement('div');
+    actions.className = 'bubble-actions';
+
+    const replyBtn = document.createElement('button');
+    replyBtn.className = 'reply-btn';
+    replyBtn.textContent = 'Reply';
+    replyBtn.onclick = (e) => {
+      e.stopPropagation();
+      setReplyTo(entry);
+    };
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = (e) => {
+      e.stopPropagation();
+      editingEntryId = entry.id;
+      if (selectedBubble) { selectedBubble.classList.remove('selected', 'show-time'); selectedBubble = null; }
+      renderChat();
+    };
 
     const del = document.createElement('button');
     del.className = 'delete-btn';
     del.textContent = 'Delete';
     del.onclick = (e) => {
       e.stopPropagation();
-      chatList.entries.splice(i, 1);
+      const removed = chatList.entries.splice(i, 1)[0];
       debouncedSave();
       renderChat();
+      showUndoToast('Message deleted', () => {
+        chatList.entries.splice(i, 0, removed);
+        debouncedSave();
+        renderChat();
+      });
     };
+
+    actions.appendChild(replyBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(del);
 
     wrapper.onclick = () => {
       if (selectedBubble && selectedBubble !== wrapper) {
@@ -1249,7 +1625,7 @@ function renderChat() {
 
     wrapper.appendChild(bubble);
     wrapper.appendChild(time);
-    wrapper.appendChild(del);
+    wrapper.appendChild(actions);
     container.appendChild(wrapper);
     lastPov = entry.pov;
   });
@@ -1264,28 +1640,121 @@ function scrollToBottom() {
   });
 }
 
+function getAllIdeaTags() {
+  const tags = new Set();
+  state.ideas.forEach(idea => {
+    if (idea.tags) idea.tags.forEach(t => tags.add(t));
+  });
+  return [...tags].sort();
+}
+
+function renderIdeaFilterBar() {
+  const bar = document.getElementById('ideasFilterBar');
+  bar.textContent = '';
+  const allTags = getAllIdeaTags();
+  if (allTags.length === 0) return;
+
+  const allBtn = document.createElement('button');
+  allBtn.className = 'ideas-filter-btn' + (activeIdeaFilter === null ? ' active' : '');
+  allBtn.textContent = 'All';
+  allBtn.onclick = () => { activeIdeaFilter = null; renderIdeas(); };
+  bar.appendChild(allBtn);
+
+  allTags.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'ideas-filter-btn' + (activeIdeaFilter === tag ? ' active' : '');
+    btn.textContent = tag;
+    btn.onclick = () => { activeIdeaFilter = activeIdeaFilter === tag ? null : tag; renderIdeas(); };
+    bar.appendChild(btn);
+  });
+}
+
 function renderIdeas() {
   const list = document.getElementById('ideasList');
   list.innerHTML = '';
+  renderIdeaFilterBar();
 
-  if (state.ideas.length === 0) {
+  const filtered = activeIdeaFilter
+    ? state.ideas.filter(idea => idea.tags && idea.tags.includes(activeIdeaFilter))
+    : state.ideas;
+
+  if (filtered.length === 0) {
     list.innerHTML = `
       <div class="empty-state" style="padding-top:60px;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a7 7 0 00-4 12.7V17h8v-2.3A7 7 0 0012 2z"/><line x1="9" y1="21" x2="15" y2="21"/>
         </svg>
-        <p>Capture your ideas here</p>
+        <p>${activeIdeaFilter ? 'No ideas with this tag' : 'Capture your ideas here'}</p>
       </div>`;
     return;
   }
 
-  state.ideas.forEach((idea, i) => {
+  filtered.forEach((idea) => {
+    const i = state.ideas.indexOf(idea);
     const card = document.createElement('div');
     card.className = 'idea-card';
 
     const text = document.createElement('div');
     text.className = 'idea-text';
     text.textContent = idea.text;
+
+    // Tags
+    const tagsContainer = document.createElement('div');
+    tagsContainer.className = 'idea-tags';
+    if (idea.tags) {
+      idea.tags.forEach((tag, ti) => {
+        const tagEl = document.createElement('button');
+        tagEl.className = 'idea-tag';
+        tagEl.textContent = tag;
+        tagEl.onclick = (e) => {
+          e.stopPropagation();
+          activeIdeaFilter = activeIdeaFilter === tag ? null : tag;
+          renderIdeas();
+        };
+        tagEl.oncontextmenu = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          idea.tags.splice(ti, 1);
+          if (idea.tags.length === 0) delete idea.tags;
+          debouncedSave();
+          renderIdeas();
+        };
+        tagsContainer.appendChild(tagEl);
+      });
+    }
+    const addTagBtn = document.createElement('button');
+    addTagBtn.className = 'idea-tag-add';
+    addTagBtn.textContent = '+ tag';
+    addTagBtn.onclick = (e) => {
+      e.stopPropagation();
+      addTagBtn.hidden = true;
+      const input = document.createElement('input');
+      input.className = 'idea-tag-input';
+      input.placeholder = 'tag name';
+      input.maxLength = 20;
+      input.onkeydown = (ev) => {
+        if (ev.key === 'Enter') {
+          const val = input.value.trim().toLowerCase();
+          if (val) {
+            if (!idea.tags) idea.tags = [];
+            if (!idea.tags.includes(val)) { idea.tags.push(val); debouncedSave(); }
+          }
+          renderIdeas();
+        }
+        if (ev.key === 'Escape') renderIdeas();
+      };
+      input.onblur = () => {
+        const val = input.value.trim().toLowerCase();
+        if (val) {
+          if (!idea.tags) idea.tags = [];
+          if (!idea.tags.includes(val)) { idea.tags.push(val); debouncedSave(); }
+        }
+        renderIdeas();
+      };
+      tagsContainer.insertBefore(input, addTagBtn);
+      setTimeout(() => input.focus(), 50);
+    };
+    tagsContainer.appendChild(addTagBtn);
 
     const meta = document.createElement('div');
     meta.className = 'idea-meta';
@@ -1300,53 +1769,84 @@ function renderIdeas() {
     del.textContent = 'Delete';
     del.onclick = (e) => {
       e.stopPropagation();
-      state.ideas.splice(i, 1);
+      const removed = state.ideas.splice(i, 1)[0];
       debouncedSave();
       renderIdeas();
+      showUndoToast('Idea deleted', () => {
+        state.ideas.splice(i, 0, removed);
+        debouncedSave();
+        renderIdeas();
+      });
     };
 
     meta.appendChild(time);
     meta.appendChild(del);
     card.appendChild(text);
+    card.appendChild(tagsContainer);
     card.appendChild(meta);
     list.appendChild(card);
   });
 }
 
+function getSearchDateRange() {
+  const fromEl = document.getElementById('searchDateFrom');
+  const toEl = document.getElementById('searchDateTo');
+  const from = fromEl && fromEl.value ? new Date(fromEl.value + 'T00:00:00') : null;
+  const to = toEl && toEl.value ? new Date(toEl.value + 'T23:59:59') : null;
+  return { from, to };
+}
+
 function renderSearch(query) {
   const results = document.getElementById('searchResults');
-  if (!query || !query.trim()) {
-    results.innerHTML = '<div class="search-empty">Type to search your journal</div>';
+  const { from: dateFrom, to: dateTo } = getSearchDateRange();
+  const hasDateFilter = dateFrom || dateTo;
+
+  if ((!query || !query.trim()) && !hasDateFilter) {
+    results.textContent = '';
+    const empty = document.createElement('div');
+    empty.className = 'search-empty';
+    empty.textContent = 'Type to search your journal';
+    results.appendChild(empty);
     return;
   }
 
-  const q = query.trim().toLowerCase();
+  const q = query ? query.trim().toLowerCase() : '';
   const matches = [];
+
+  function matchesDateRange(timestamp) {
+    if (!hasDateFilter) return true;
+    const d = new Date(timestamp);
+    if (dateFrom && d < dateFrom) return false;
+    if (dateTo && d > dateTo) return false;
+    return true;
+  }
 
   state.chatLists.forEach(cl => {
     cl.entries.forEach(entry => {
-      if (entry.text.toLowerCase().includes(q)) {
-        matches.push({ type: 'chat', text: entry.text, timestamp: entry.timestamp, pov: entry.pov, chatListName: cl.name });
-      }
+      if (!matchesDateRange(entry.timestamp)) return;
+      if (q && !entry.text.toLowerCase().includes(q)) return;
+      matches.push({ type: 'chat', text: entry.text, timestamp: entry.timestamp, pov: entry.pov, chatListName: cl.name });
     });
   });
 
   state.ideas.forEach(idea => {
-    if (idea.text.toLowerCase().includes(q)) {
-      matches.push({ type: 'idea', text: idea.text, timestamp: idea.timestamp });
-    }
+    if (!matchesDateRange(idea.timestamp)) return;
+    if (q && !idea.text.toLowerCase().includes(q)) return;
+    matches.push({ type: 'idea', text: idea.text, timestamp: idea.timestamp });
   });
 
   matches.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   if (matches.length === 0) {
-    results.innerHTML = '<div class="search-empty">No results found</div>';
+    results.textContent = '';
+    const empty = document.createElement('div');
+    empty.className = 'search-empty';
+    empty.textContent = 'No results found';
+    results.appendChild(empty);
     return;
   }
 
-  results.innerHTML = '';
-  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(`(${escaped})`, 'gi');
+  results.textContent = '';
 
   matches.forEach(m => {
     const div = document.createElement('div');
@@ -1358,7 +1858,7 @@ function renderSearch(query) {
 
     const text = document.createElement('div');
     text.className = 'search-result-text';
-    text.innerHTML = escapeHtml(m.text).replace(regex, '<mark>$1</mark>');
+    if (q) { highlightText(text, m.text, q); } else { text.textContent = m.text; }
 
     const time = document.createElement('div');
     time.className = 'search-result-time';
@@ -1378,9 +1878,125 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function renderStats() {
+  const area = document.getElementById('statsArea');
+  area.textContent = '';
+
+  const allEntries = [];
+  state.chatLists.forEach(cl => cl.entries.forEach(e => allEntries.push(e)));
+  const totalMessages = allEntries.length;
+  const totalIdeas = state.ideas.length;
+  const totalWords = allEntries.reduce((sum, e) => sum + e.text.split(/\s+/).filter(Boolean).length, 0)
+    + state.ideas.reduce((sum, e) => sum + e.text.split(/\s+/).filter(Boolean).length, 0);
+  const totalChats = state.chatLists.length;
+
+  // Streak calculation (last 30 days)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dayMap = new Set();
+  allEntries.forEach(e => {
+    const d = new Date(e.timestamp);
+    d.setHours(0, 0, 0, 0);
+    dayMap.add(d.getTime());
+  });
+  state.ideas.forEach(e => {
+    const d = new Date(e.timestamp);
+    d.setHours(0, 0, 0, 0);
+    dayMap.add(d.getTime());
+  });
+
+  let currentStreak = 0;
+  const checkDay = new Date(today);
+  // If no entry today, start from yesterday
+  if (!dayMap.has(checkDay.getTime())) {
+    checkDay.setDate(checkDay.getDate() - 1);
+  }
+  while (dayMap.has(checkDay.getTime())) {
+    currentStreak++;
+    checkDay.setDate(checkDay.getDate() - 1);
+  }
+
+  let longestStreak = 0;
+  if (dayMap.size > 0) {
+    const sortedDays = [...dayMap].sort((a, b) => a - b);
+    let streak = 1;
+    for (let i = 1; i < sortedDays.length; i++) {
+      if (sortedDays[i] - sortedDays[i - 1] === 86400000) {
+        streak++;
+      } else {
+        longestStreak = Math.max(longestStreak, streak);
+        streak = 1;
+      }
+    }
+    longestStreak = Math.max(longestStreak, streak);
+  }
+
+  // Entries per week (last 4 weeks)
+  const fourWeeksAgo = new Date(today);
+  fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+  const recentEntries = allEntries.filter(e => new Date(e.timestamp) >= fourWeeksAgo).length;
+  const avgPerWeek = (recentEntries / 4).toFixed(1);
+
+  // Build grid
+  const grid = document.createElement('div');
+  grid.className = 'stats-grid';
+
+  function addCard(value, label, wide) {
+    const card = document.createElement('div');
+    card.className = 'stat-card' + (wide ? ' wide' : '');
+    const v = document.createElement('div');
+    v.className = 'stat-value';
+    v.textContent = value;
+    const l = document.createElement('div');
+    l.className = 'stat-label';
+    l.textContent = label;
+    card.appendChild(v);
+    card.appendChild(l);
+    return card;
+  }
+
+  grid.appendChild(addCard(totalMessages, 'Messages'));
+  grid.appendChild(addCard(totalIdeas, 'Ideas'));
+  grid.appendChild(addCard(totalWords.toLocaleString(), 'Total Words'));
+  grid.appendChild(addCard(totalChats, 'Chat Lists'));
+  grid.appendChild(addCard(avgPerWeek, 'Avg Messages/Week'));
+  grid.appendChild(addCard(currentStreak, 'Current Streak (days)'));
+
+  // Longest streak card
+  const longestCard = addCard(longestStreak, 'Longest Streak (days)', true);
+  grid.appendChild(longestCard);
+
+  area.appendChild(grid);
+
+  // 30-day activity dots
+  const dotsCard = document.createElement('div');
+  dotsCard.className = 'stat-card wide';
+  const dotsLabel = document.createElement('div');
+  dotsLabel.className = 'stat-label';
+  dotsLabel.style.marginBottom = '8px';
+  dotsLabel.textContent = 'Last 30 days activity';
+  dotsCard.appendChild(dotsLabel);
+  const dotsBar = document.createElement('div');
+  dotsBar.className = 'streak-bar';
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    const dot = document.createElement('div');
+    dot.className = 'streak-dot';
+    if (dayMap.has(d.getTime())) dot.classList.add('active');
+    if (i === 0) dot.classList.add('today');
+    dot.title = d.toLocaleDateString();
+    dotsBar.appendChild(dot);
+  }
+  dotsCard.appendChild(dotsBar);
+  area.appendChild(dotsCard);
+}
+
 function renderCurrentTab() {
   if (activeTab === 'chat') renderChat();
   else if (activeTab === 'ideas') renderIdeas();
+  else if (activeTab === 'stats') renderStats();
 }
 
 // ===========================
@@ -1400,7 +2016,7 @@ function switchTab(tab) {
   if (tab === 'chat') {
     updateChatTitle();
   } else {
-    const titles = { ideas: 'Ideas', upload: 'Backup', search: 'Search' };
+    const titles = { ideas: 'Ideas', upload: 'Backup', search: 'Search', stats: 'Stats' };
     tabTitleEl.textContent = titles[tab];
   }
 
@@ -1411,14 +2027,18 @@ function switchTab(tab) {
     selectedBubble.classList.remove('selected', 'show-time');
     selectedBubble = null;
   }
+  clearReplyTo();
 
   if (tab === 'chat') renderChat();
   else if (tab === 'ideas') renderIdeas();
   else if (tab === 'search') {
     document.getElementById('searchInput').value = '';
+    document.getElementById('searchDateFrom').value = '';
+    document.getElementById('searchDateTo').value = '';
     renderSearch('');
     setTimeout(() => document.getElementById('searchInput').focus(), 100);
   }
+  else if (tab === 'stats') renderStats();
 }
 
 // ===========================
@@ -1430,18 +2050,34 @@ function sendMessage() {
   if (!text) return;
 
   const pov = document.getElementById('povToggle').checked ? 1 : 0;
-  getActiveChatList().entries.push({
-    id: Date.now(),
-    text,
-    pov,
-    timestamp: new Date().toISOString()
-  });
+  const entry = { id: Date.now(), text, pov, timestamp: new Date().toISOString() };
+  if (replyToEntry) entry.replyTo = replyToEntry.id;
+  getActiveChatList().entries.push(entry);
 
   input.value = '';
   input.style.height = 'auto';
   document.getElementById('chatSend').disabled = true;
+  clearReplyTo();
   debouncedSave();
   renderChat();
+}
+
+// Reply management
+function setReplyTo(entry) {
+  replyToEntry = entry;
+  document.getElementById('replyPreviewBar').hidden = false;
+  document.getElementById('replyPreviewText').textContent = entry.text.length > 100 ? entry.text.slice(0, 100) + '...' : entry.text;
+  document.getElementById('chatInput').focus();
+  if (selectedBubble) {
+    selectedBubble.classList.remove('selected', 'show-time');
+    selectedBubble = null;
+  }
+}
+
+function clearReplyTo() {
+  replyToEntry = null;
+  document.getElementById('replyPreviewBar').hidden = true;
+  document.getElementById('replyPreviewText').textContent = '';
 }
 
 function addIdea() {
@@ -1489,19 +2125,35 @@ async function exportData() {
   }
 }
 
-async function importData(file) {
+function startImport(file) {
+  pendingImportFile = file;
+  document.getElementById('importPwInput').value = '';
+  document.getElementById('importPwError').textContent = '';
+  document.getElementById('importPwOverlay').classList.add('active');
+}
+
+function closeImportPwModal() {
+  document.getElementById('importPwOverlay').classList.remove('active');
+  pendingImportFile = null;
+}
+
+async function submitImportPw() {
+  const pw = document.getElementById('importPwInput').value;
+  const errorEl = document.getElementById('importPwError');
+  if (!pw) { errorEl.textContent = 'Please enter the backup password'; return; }
+
   try {
-    const text = await file.text();
+    const text = await pendingImportFile.text();
     const obj = JSON.parse(text);
     if (!obj.version || !obj.salt || !obj.data) throw new Error('Invalid file');
 
     const importSalt = base64ToUint8(obj.salt);
     let json;
     try {
-      const importKey = await deriveKey(currentPassword, importSalt);
+      const importKey = await deriveKey(pw, importSalt);
       json = await decryptData(obj.data, importKey);
     } catch (e) {
-      const legacyKey = await deriveKey(currentPassword, importSalt, LEGACY_PBKDF2_ITERATIONS);
+      const legacyKey = await deriveKey(pw, importSalt, LEGACY_PBKDF2_ITERATIONS);
       json = await decryptData(obj.data, legacyKey);
     }
     const imported = JSON.parse(json);
@@ -1513,9 +2165,10 @@ async function importData(file) {
     applyTheme();
     if (activeTab === 'chat') updateChatTitle();
     renderCurrentTab();
+    closeImportPwModal();
     showToast('Backup imported successfully');
   } catch (e) {
-    showToast('Import failed - check that your password matches the backup');
+    errorEl.textContent = 'Wrong password or invalid backup file';
   }
 }
 
@@ -1587,7 +2240,6 @@ async function submitPwChange() {
   // Re-encrypt with new password
   salt = crypto.getRandomValues(new Uint8Array(32));
   cryptoKey = await deriveKey(newPw, salt);
-  currentPassword = newPw;
   await idbSet('journal_salt', uint8ToBase64(salt));
   await saveState();
 
@@ -1612,6 +2264,32 @@ function showToast(message) {
     t.classList.remove('show');
     setTimeout(() => t.remove(), 300);
   }, 2500);
+}
+
+function showUndoToast(message, undoFn) {
+  const existing = document.querySelector('.toast-undo');
+  if (existing) existing.remove();
+  clearTimeout(undoTimer);
+  const t = document.createElement('div');
+  t.className = 'toast-undo';
+  const span = document.createElement('span');
+  span.textContent = message;
+  const btn = document.createElement('button');
+  btn.textContent = 'Undo';
+  btn.onclick = () => {
+    clearTimeout(undoTimer);
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+    undoFn();
+  };
+  t.appendChild(span);
+  t.appendChild(btn);
+  document.body.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('show')));
+  undoTimer = setTimeout(() => {
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
+  }, 5000);
 }
 
 // ===========================
@@ -1715,7 +2393,6 @@ async function performLogout(shouldExport) {
   // Clear all state
   cryptoKey = null;
   salt = null;
-  currentPassword = null;
   state = null;
   // Show lock screen and hide app
   document.getElementById('app').hidden = true;
@@ -1728,8 +2405,7 @@ async function performLogout(shouldExport) {
   document.getElementById('lockBtn').textContent = 'Unlock';
   document.getElementById('passwordInput').value = '';
   document.getElementById('lockError').textContent = '';
-  failedAttempts = 0;
-  lockoutUntil = 0;
+  await clearLockoutState();
   // Reset tabs to default
   activeTab = 'chat';
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -1758,7 +2434,6 @@ async function logoutChangePw() {
   // Re-encrypt with new password (no old password needed since we're already logged in)
   salt = crypto.getRandomValues(new Uint8Array(32));
   cryptoKey = await deriveKey(newPw, salt);
-  currentPassword = newPw;
   await idbSet('journal_salt', uint8ToBase64(salt));
   await saveState();
 
@@ -1770,25 +2445,54 @@ async function logoutChangePw() {
 // ===========================
 function openDeleteAccountModal() {
   closeSettings();
+  document.getElementById('deleteAccountPwInput').value = '';
+  document.getElementById('deleteAccountPwError').textContent = '';
   document.getElementById('deleteAccountOverlay').classList.add('active');
 }
 
 function closeDeleteAccountModal() {
   document.getElementById('deleteAccountOverlay').classList.remove('active');
+  document.getElementById('deleteAccountPwInput').value = '';
+  document.getElementById('deleteAccountPwError').textContent = '';
 }
 
 async function confirmDeleteAccount() {
+  const pw = document.getElementById('deleteAccountPwInput').value;
+  const errorEl = document.getElementById('deleteAccountPwError');
+
+  if (!pw) { errorEl.textContent = 'Please enter your password'; return; }
+
+  // Verify password before deletion
+  try {
+    const testSaltB64 = await idbGet('journal_salt');
+    const testSalt = base64ToUint8(testSaltB64);
+    const testData = await idbGet('journal_data');
+    let verified = false;
+    try {
+      const testKey = await deriveKey(pw, testSalt);
+      await decryptData(testData, testKey);
+      verified = true;
+    } catch {
+      const legacyKey = await deriveKey(pw, testSalt, LEGACY_PBKDF2_ITERATIONS);
+      await decryptData(testData, legacyKey);
+      verified = true;
+    }
+    if (!verified) throw new Error('Verification failed');
+  } catch {
+    errorEl.textContent = 'Incorrect password';
+    return;
+  }
+
   stopAutoLock();
   // Wipe all data from IndexedDB
   await idbDelete('journal_salt');
   await idbDelete('journal_data');
+  await idbDelete('lockout_state');
   // Clear in-memory state
   cryptoKey = null;
   salt = null;
-  currentPassword = null;
   state = null;
-  failedAttempts = 0;
-  lockoutUntil = 0;
+  await clearLockoutState();
   // Close modal
   closeDeleteAccountModal();
   // Show lock screen in setup mode
@@ -1877,7 +2581,9 @@ function renderChatListSheet() {
     if (cl) {
       const row = document.createElement('div');
       row.className = 'chatlist-confirm-delete';
-      row.innerHTML = `<span>Delete "${escapeHtml(cl.name)}"? This can't be undone.</span>`;
+      const rowSpan = document.createElement('span');
+      rowSpan.textContent = `Delete "${cl.name}"? This can't be undone.`;
+      row.appendChild(rowSpan);
       const cancelBtn = document.createElement('button');
       cancelBtn.className = 'cancel-del';
       cancelBtn.textContent = 'Cancel';
@@ -1892,13 +2598,52 @@ function renderChatListSheet() {
     }
   }
 
-  state.chatLists.forEach(cl => {
+  state.chatLists.forEach((cl, clIdx) => {
     const item = document.createElement('div');
     item.className = 'chatlist-item' + (cl.id === state.activeChatListId ? ' active' : '');
+    item.setAttribute('draggable', 'true');
+    item.setAttribute('data-chat-idx', clIdx);
+
+    item.ondragstart = (e) => {
+      draggedChatItem = clIdx;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    };
+    item.ondragend = () => {
+      item.classList.remove('dragging');
+      draggedChatItem = null;
+      container.querySelectorAll('.chatlist-item').forEach(el => el.classList.remove('drag-over'));
+    };
+    item.ondragover = (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      container.querySelectorAll('.chatlist-item').forEach(el => el.classList.remove('drag-over'));
+      if (draggedChatItem !== null && draggedChatItem !== clIdx) {
+        item.classList.add('drag-over');
+      }
+    };
+    item.ondrop = (e) => {
+      e.preventDefault();
+      if (draggedChatItem !== null && draggedChatItem !== clIdx) {
+        const moved = state.chatLists.splice(draggedChatItem, 1)[0];
+        state.chatLists.splice(clIdx, 0, moved);
+        debouncedSave();
+        draggedChatItem = null;
+        renderChatListSheet();
+      }
+    };
+
+    // Drag handle
+    const handle = document.createElement('div');
+    handle.className = 'chatlist-drag-handle';
+    handle.appendChild(makeSvg([
+      ['line', 'x1', '4', 'y1', '9', 'x2', '20', 'y2', '9'],
+      ['line', 'x1', '4', 'y1', '15', 'x2', '20', 'y2', '15']
+    ]));
 
     const icon = document.createElement('div');
     icon.className = 'chatlist-item-icon';
-    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>';
+    icon.appendChild(makeSvg([['path', 'd', 'M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z']]));
 
     const info = document.createElement('div');
     info.className = 'chatlist-item-info';
@@ -1940,7 +2685,7 @@ function renderChatListSheet() {
     // Rename button
     const renameBtn = document.createElement('button');
     renameBtn.className = 'chatlist-action-btn';
-    renameBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+    renameBtn.appendChild(makeSvg([['path', 'd', 'M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7'], ['path', 'd', 'M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z']]));
     renameBtn.title = 'Rename';
     renameBtn.onclick = (e) => {
       e.stopPropagation();
@@ -1952,7 +2697,7 @@ function renderChatListSheet() {
     // Delete button (only if more than one list)
     const delBtn = document.createElement('button');
     delBtn.className = 'chatlist-action-btn danger';
-    delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>';
+    delBtn.appendChild(makeSvg([['polyline', 'points', '3 6 5 6 21 6'], ['path', 'd', 'M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6'], ['path', 'd', 'M10 11v6'], ['path', 'd', 'M14 11v6'], ['path', 'd', 'M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2']]));
     delBtn.title = 'Delete';
     delBtn.onclick = (e) => {
       e.stopPropagation();
@@ -1966,6 +2711,7 @@ function renderChatListSheet() {
       actions.appendChild(delBtn);
     }
 
+    item.appendChild(handle);
     item.appendChild(icon);
     item.appendChild(info);
     item.appendChild(actions);
@@ -2087,6 +2833,7 @@ async function init() {
   }
 
   setupManifest();
+  await loadLockoutState();
 
   let isReturning = !!(await idbGet('journal_salt'));
 
@@ -2125,10 +2872,11 @@ async function init() {
           if (failedAttempts >= 5) {
             lockoutUntil = Date.now() + Math.min(failedAttempts * 5000, 60000);
           }
+          await saveLockoutState();
           lockError.textContent = 'Wrong password';
           return;
         }
-        failedAttempts = 0;
+        await clearLockoutState();
       } else {
         if (!pw) { lockError.textContent = 'Please enter a password'; return; }
         if (pw.length < MIN_PASSWORD_LENGTH) { lockError.textContent = `Password must be at least ${MIN_PASSWORD_LENGTH} characters`; return; }
@@ -2173,6 +2921,7 @@ async function init() {
   });
   chatInput.addEventListener('focus', () => setTimeout(scrollToBottom, 300));
   chatSend.onclick = sendMessage;
+  document.getElementById('replyCancelBtn').onclick = clearReplyTo;
 
   // Ideas input
   const ideaInput = document.getElementById('ideaInput');
@@ -2191,10 +2940,18 @@ async function init() {
 
   // Search
   let searchTimer;
-  document.getElementById('searchInput').addEventListener('input', (e) => {
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', (e) => {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => renderSearch(e.target.value), 150);
   });
+  document.getElementById('searchDateFrom').addEventListener('change', () => renderSearch(searchInput.value));
+  document.getElementById('searchDateTo').addEventListener('change', () => renderSearch(searchInput.value));
+  document.getElementById('searchClearDates').onclick = () => {
+    document.getElementById('searchDateFrom').value = '';
+    document.getElementById('searchDateTo').value = '';
+    renderSearch(searchInput.value);
+  };
 
   // Settings
   document.getElementById('settingsOpen').onclick = openSettings;
@@ -2221,7 +2978,17 @@ async function init() {
   document.getElementById('exportBtn').onclick = exportData;
   document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
   document.getElementById('importFile').addEventListener('change', (e) => {
-    if (e.target.files[0]) { importData(e.target.files[0]); e.target.value = ''; }
+    if (e.target.files[0]) { startImport(e.target.files[0]); e.target.value = ''; }
+  });
+
+  // Import password modal
+  document.getElementById('importPwSubmit').onclick = submitImportPw;
+  document.getElementById('importPwCancel').onclick = closeImportPwModal;
+  document.getElementById('importPwOverlay').onclick = (e) => {
+    if (e.target === e.currentTarget) closeImportPwModal();
+  };
+  document.getElementById('importPwInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitImportPw();
   });
 
   // Change password
@@ -2263,7 +3030,7 @@ async function init() {
 
   // Keyboard shortcut
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { closeDeleteAccountModal(); closeLogoutModal(); closeChatListSheet(); closeSettings(); }
+    if (e.key === 'Escape') { closeImportPwModal(); closeDeleteAccountModal(); closeLogoutModal(); closeChatListSheet(); closeSettings(); clearReplyTo(); }
   });
 
   // Click outside bubbles to deselect
